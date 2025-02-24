@@ -43,23 +43,24 @@ export default function DebugResults({ results }: DebugResultsProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium mb-2">Explanation</h3>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{results.explanation}</p>
-        </CardContent>
-      </Card>
-
       {results.correctedCode && (
         <Card>
           <CardContent className="p-4">
             <h3 className="font-medium mb-2">Corrected Code</h3>
-            <CodeEditor
-              value={results.correctedCode}
-              onChange={() => {}}
-              language="javascript"
-              readOnly
-            />
+            <div className="mb-4">
+              <CodeEditor
+                value={results.correctedCode}
+                onChange={() => {}}
+                language="javascript"
+                readOnly
+              />
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="font-medium mb-2">Explanation</h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {results.explanation}
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
