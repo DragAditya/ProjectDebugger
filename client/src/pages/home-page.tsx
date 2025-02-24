@@ -126,8 +126,9 @@ export default function HomePage() {
   };
 
   const handleCopy = () => {
-    //Implementation for copy functionality
-    navigator.clipboard.writeText(JSON.stringify(getResults(), null, 2));
+    const results = getResults();
+    const codeToCopy = results?.correctedCode || results?.translatedCode || '';
+    navigator.clipboard.writeText(codeToCopy);
   };
 
   return (
