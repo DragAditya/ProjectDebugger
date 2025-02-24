@@ -8,9 +8,10 @@ interface DebugResultsProps {
     explanation: string;
     correctedCode?: string;
   };
+  language?: string;
 }
 
-export default function DebugResults({ results }: DebugResultsProps) {
+export default function DebugResults({ results, language = "javascript" }: DebugResultsProps) {
   if (!results) {
     return (
       <Card className="min-h-[400px]">
@@ -51,7 +52,7 @@ export default function DebugResults({ results }: DebugResultsProps) {
               <CodeEditor
                 value={results.correctedCode}
                 onChange={() => {}}
-                language="javascript"
+                language={language}
                 readOnly
               />
             </div>

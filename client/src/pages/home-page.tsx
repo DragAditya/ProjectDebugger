@@ -107,7 +107,10 @@ export default function HomePage() {
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Debug Results</h2>
-            <DebugResults results={debugMutation.data} />
+            <DebugResults 
+              results={debugMutation.data} 
+              language={language}
+            />
           </div>
         </div>
       </main>
