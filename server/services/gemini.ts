@@ -6,31 +6,43 @@ export async function analyzeCode(code: string, language: string) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const prompt = `You are a code debugging assistant. Please analyze the following ${language} code and provide:
-1. A list of potential issues or bugs
-2. A clear explanation of what needs to be fixed
+    const prompt = `As an expert code debugging assistant, analyze this ${language} code and provide:
+
+1. List of issues found
+2. Detailed explanation of each issue
+3. The corrected code
 
 Code to analyze:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-Format your response as a JSON object with two fields:
-- issues: array of strings, each describing a specific issue
-- explanation: string with a comprehensive explanation`;
+Format your response exactly like this JSON:
+{
+  "issues": [
+    "Clear description of each issue found"
+  ],
+  "explanation": "Detailed explanation of what's wrong and how to fix it",
+  "correctedCode": "The complete corrected version of the code"
+}`;
 
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
-    
-    // Parse the JSON response
+
     try {
-      return JSON.parse(text);
-    } catch (e) {
-      // If JSON parsing fails, create a structured response from the text
+      const parsedResponse = JSON.parse(text);
       return {
-        issues: ["Could not parse response"],
-        explanation: text
+        issues: parsedResponse.issues || [],
+        explanation: parsedResponse.explanation || "No explanation provided",
+        correctedCode: parsedResponse.correctedCode || code
+      };
+    } catch (e) {
+      console.error("Failed to parse Gemini response:", text);
+      return {
+        issues: ["Error analyzing code"],
+        explanation: "The AI model provided an invalid response format. Please try again.",
+        correctedCode: code
       };
     }
   } catch (error) {

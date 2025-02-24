@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import CodeEditor from "./code-editor";
 
 interface DebugResultsProps {
   results?: {
     issues: string[];
     explanation: string;
+    correctedCode?: string;
   };
 }
 
@@ -34,7 +36,7 @@ export default function DebugResults({ results }: DebugResultsProps) {
           <ul className="space-y-2">
             {results.issues.map((issue, index) => (
               <li key={index} className="text-sm text-muted-foreground">
-                {issue}
+                • {issue}
               </li>
             ))}
           </ul>
@@ -44,9 +46,23 @@ export default function DebugResults({ results }: DebugResultsProps) {
       <Card>
         <CardContent className="p-4">
           <h3 className="font-medium mb-2">Explanation</h3>
-          <p className="text-sm text-muted-foreground">{results.explanation}</p>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{results.explanation}</p>
         </CardContent>
       </Card>
+
+      {results.correctedCode && (
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-medium mb-2">Corrected Code</h3>
+            <CodeEditor
+              value={results.correctedCode}
+              onChange={() => {}}
+              language="javascript"
+              readOnly
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

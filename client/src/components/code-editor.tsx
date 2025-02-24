@@ -12,6 +12,7 @@ interface CodeEditorProps {
   value: string;
   onChange: (value: string) => void;
   language: string;
+  readOnly?: boolean;
 }
 
 const languageExtensions: Record<string, any> = {
@@ -21,7 +22,7 @@ const languageExtensions: Record<string, any> = {
   cpp
 };
 
-export default function CodeEditor({ value, onChange, language }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, language, readOnly = false }: CodeEditorProps) {
   const [editor, setEditor] = useState<EditorView | null>(null);
 
   useEffect(() => {
@@ -33,9 +34,9 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
       extensions: [
         basicSetup,
         languageExtensions[language](),
-        EditorState.changeFilter.of(() => true),
+        EditorState.readOnly.of(readOnly),
         EditorView.updateListener.of(update => {
-          if (update.docChanged) {
+          if (update.docChanged && !readOnly) {
             onChange(update.state.doc.toString());
           }
         })
@@ -52,7 +53,7 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     return () => {
       view.destroy();
     };
-  }, [language]); // Recreate editor when language changes
+  }, [language, readOnly]); // Recreate editor when language or readOnly changes
 
   useEffect(() => {
     if (editor && value !== editor.state.doc.toString()) {
