@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -88,10 +89,11 @@ export default function HomePage() {
                 </SelectContent>
               </Select>
             </div>
-            <CodeEditor
+            <Textarea 
               value={code}
-              onChange={setCode}
-              language={language}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter your code here..."
+              className="min-h-[400px] font-mono"
             />
             <Button
               className="w-full"
