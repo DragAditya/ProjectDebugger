@@ -21,6 +21,7 @@ export default function HomePage() {
   const { logoutMutation, user } = useAuth();
   const { toast } = useToast();
   const [language, setLanguage] = useState("javascript");
+  const [targetLanguage, setTargetLanguage] = useState("python");
   const [code, setCode] = useState("");
 
   const debugMutation = useMutation({
@@ -42,8 +43,58 @@ export default function HomePage() {
     },
   });
 
+  const translateMutation = useMutation({
+    mutationFn: async (data: { code: string; fromLanguage: string; toLanguage: string }) => {
+      const res = await apiRequest("POST", "/api/translate", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Code translated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to translate code",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const explainMutation = useMutation({
+    mutationFn: async (data: { code: string; language: string }) => {
+      const res = await apiRequest("POST", "/api/explain", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Code explained successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to explain code",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDebug = () => {
     debugMutation.mutate({ code, language });
+  };
+
+  const handleTranslate = () => {
+    translateMutation.mutate({ 
+      code, 
+      fromLanguage: language,
+      toLanguage: targetLanguage 
+    });
+  };
+
+  const handleExplain = () => {
+    explainMutation.mutate({ code, language });
   };
 
   return (
@@ -95,16 +146,55 @@ export default function HomePage() {
               placeholder="Enter your code here..."
               className="min-h-[400px] font-mono"
             />
-            <Button
-              className="w-full"
-              onClick={handleDebug}
-              disabled={debugMutation.isPending}
-            >
-              {debugMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Debug Code
-            </Button>
+            <div className="space-y-2">
+              <Button
+                className="w-full"
+                onClick={handleDebug}
+                disabled={debugMutation.isPending}
+              >
+                {debugMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Debug Code
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={handleTranslate}
+                  disabled={translateMutation.isPending}
+                >
+                  {translateMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Translate Code
+                </Button>
+                <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="javascript">JavaScript</SelectItem>
+                    <SelectItem value="python">Python</SelectItem>
+                    <SelectItem value="java">Java</SelectItem>
+                    <SelectItem value="cpp">C++</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={handleExplain}
+                disabled={explainMutation.isPending}
+              >
+                {explainMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Explain Code
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
