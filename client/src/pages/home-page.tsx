@@ -14,6 +14,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogOut } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
   const { logoutMutation, user } = useAuth();
@@ -53,6 +54,7 @@ export default function HomePage() {
             <span className="text-muted-foreground">
               Welcome, {user?.username}
             </span>
+            <ThemeToggle />
             <Button
               variant="outline"
               size="sm"

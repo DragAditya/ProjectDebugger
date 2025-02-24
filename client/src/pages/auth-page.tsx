@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { Redirect } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -42,7 +43,10 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-8 relative">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <Tabs defaultValue="login">

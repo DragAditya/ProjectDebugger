@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+import { javascript } from "@codemirror/lang-javascript";
+import { python } from "@codemirror/lang-python";
+import { java } from "@codemirror/lang-java";
+import { cpp } from "@codemirror/lang-cpp";
 
 interface CodeEditorProps {
   value: string;
@@ -7,53 +14,62 @@ interface CodeEditorProps {
   language: string;
 }
 
+const languageExtensions: Record<string, any> = {
+  javascript,
+  python,
+  java,
+  cpp
+};
+
 export default function CodeEditor({ value, onChange, language }: CodeEditorProps) {
-  const [editor, setEditor] = useState<any>(null);
+  const [editor, setEditor] = useState<EditorView | null>(null);
 
   useEffect(() => {
-    // Dynamically import CodeMirror
-    import("codemirror").then((CodeMirror) => {
-      if (!editor) {
-        const cm = CodeMirror.fromTextArea(
-          document.getElementById("code-editor") as HTMLTextAreaElement,
-          {
-            mode: language,
-            theme: "material",
-            lineNumbers: true,
-            autoCloseBrackets: true,
-            matchBrackets: true,
-            indentUnit: 2,
-            tabSize: 2,
-            lineWrapping: true,
+    const container = document.getElementById("code-editor-container");
+    if (!container) return;
+
+    const startState = EditorState.create({
+      doc: value,
+      extensions: [
+        basicSetup,
+        languageExtensions[language](),
+        EditorState.changeFilter.of(() => true),
+        EditorView.updateListener.of(update => {
+          if (update.docChanged) {
+            onChange(update.state.doc.toString());
           }
-        );
-
-        cm.on("change", (instance) => {
-          onChange(instance.getValue());
-        });
-
-        setEditor(cm);
-      }
+        })
+      ]
     });
 
+    const view = new EditorView({
+      state: startState,
+      parent: container
+    });
+
+    setEditor(view);
+
     return () => {
-      if (editor) {
-        editor.toTextArea();
-      }
+      view.destroy();
     };
-  }, []);
+  }, [language]); // Recreate editor when language changes
 
   useEffect(() => {
-    if (editor) {
-      editor.setOption("mode", language);
+    if (editor && value !== editor.state.doc.toString()) {
+      editor.dispatch({
+        changes: {
+          from: 0,
+          to: editor.state.doc.length,
+          insert: value
+        }
+      });
     }
-  }, [language]);
+  }, [value, editor]);
 
   return (
     <Card className="relative min-h-[400px] overflow-hidden">
-      <textarea
-        id="code-editor"
-        defaultValue={value}
+      <div 
+        id="code-editor-container" 
         className="absolute inset-0 w-full h-full p-4 font-mono"
       />
     </Card>
