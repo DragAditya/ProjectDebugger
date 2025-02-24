@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import CodeEditor from "@/components/code-editor";
 import DebugResults from "@/components/debug-results";
 import {
   Select,
@@ -97,6 +96,35 @@ export default function HomePage() {
     explainMutation.mutate({ code, language });
   };
 
+  // Get the appropriate results to display
+  const getResults = () => {
+    if (translateMutation.data) return translateMutation.data;
+    if (explainMutation.data) return explainMutation.data;
+    return debugMutation.data;
+  };
+
+  // Clear other results when switching operations
+  const clearOtherResults = (keeping: 'debug' | 'translate' | 'explain') => {
+    if (keeping !== 'debug') debugMutation.reset();
+    if (keeping !== 'translate') translateMutation.reset();
+    if (keeping !== 'explain') explainMutation.reset();
+  };
+
+  const handleDebugWithReset = () => {
+    clearOtherResults('debug');
+    handleDebug();
+  };
+
+  const handleTranslateWithReset = () => {
+    clearOtherResults('translate');
+    handleTranslate();
+  };
+
+  const handleExplainWithReset = () => {
+    clearOtherResults('explain');
+    handleExplain();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -149,7 +177,7 @@ export default function HomePage() {
             <div className="space-y-2">
               <Button
                 className="w-full"
-                onClick={handleDebug}
+                onClick={handleDebugWithReset}
                 disabled={debugMutation.isPending}
               >
                 {debugMutation.isPending && (
@@ -162,7 +190,7 @@ export default function HomePage() {
                 <Button
                   className="flex-1"
                   variant="outline"
-                  onClick={handleTranslate}
+                  onClick={handleTranslateWithReset}
                   disabled={translateMutation.isPending}
                 >
                   {translateMutation.isPending && (
@@ -186,7 +214,7 @@ export default function HomePage() {
               <Button
                 className="w-full"
                 variant="outline"
-                onClick={handleExplain}
+                onClick={handleExplainWithReset}
                 disabled={explainMutation.isPending}
               >
                 {explainMutation.isPending && (
@@ -198,10 +226,10 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Debug Results</h2>
+            <h2 className="text-xl font-semibold">Results</h2>
             <DebugResults 
-              results={debugMutation.data} 
-              language={language}
+              results={getResults()} 
+              language={targetLanguage}
             />
           </div>
         </div>
