@@ -118,7 +118,9 @@ export default function DebugResults({ results, language = "javascript" }: Debug
             <div className="mt-4 pt-4 border-t">
               <h4 className="font-medium mb-2">Explanation</h4>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {results.explanation}
+                {typeof results.explanation === 'object' 
+                  ? JSON.stringify(results.explanation, null, 2)
+                  : results.explanation}
               </p>
             </div>
           </div>
