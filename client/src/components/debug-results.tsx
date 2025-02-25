@@ -120,7 +120,7 @@ export default function DebugResults({ results, language = "javascript" }: Debug
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                 {typeof results.explanation === 'object' 
                   ? JSON.stringify(results.explanation, null, 2)
-                  : results.explanation}
+                  : results.explanation || 'No explanation available'}
               </p>
             </div>
           </div>

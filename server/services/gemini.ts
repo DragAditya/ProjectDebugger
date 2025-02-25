@@ -133,10 +133,11 @@ Requirements:
 
     try {
       const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+      // Ensure responses are strings
       return {
-        overview: parsedResponse.overview || "No overview provided",
-        detailedExplanation: parsedResponse.detailedExplanation || "No detailed explanation provided",
-        keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents : []
+        overview: typeof parsedResponse.overview === 'string' ? parsedResponse.overview : JSON.stringify(parsedResponse.overview),
+        detailedExplanation: typeof parsedResponse.detailedExplanation === 'string' ? parsedResponse.detailedExplanation : JSON.stringify(parsedResponse.detailedExplanation),
+        keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map(c => typeof c === 'string' ? c : JSON.stringify(c)) : []
       };
     } catch (e) {
       console.error("Failed to parse Gemini response:", text);
