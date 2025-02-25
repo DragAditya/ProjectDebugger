@@ -134,12 +134,27 @@ Requirements:
     try {
       const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
       // Ensure responses are strings
-      // Format detailed explanation if it's an array of line explanations
+      // Format detailed explanation into a narrative format
       let formattedExplanation = parsedResponse.detailedExplanation;
       if (Array.isArray(parsedResponse.detailedExplanation)) {
-        formattedExplanation = parsedResponse.detailedExplanation
-          .map(item => `${item.line}\n${item.explanation}\n`)
-          .join('\n');
+        const functionGroups = parsedResponse.detailedExplanation.reduce((acc, item) => {
+          if (item.line.startsWith('def ')) {
+            acc.push([item]);
+          } else {
+            acc[acc.length - 1]?.push(item);
+          }
+          return acc;
+        }, []);
+
+        formattedExplanation = functionGroups.map(group => {
+          const functionName = group[0].line.split('def ')[1].split('(')[0];
+          const params = group[0].line.split('(')[1].split(')')[0];
+          const description = group.map(item => item.explanation).join(' ');
+          return `${functionName}(${params}): ${description}\n`;
+        }).join('\n');
+
+        formattedExplanation = `This code defines the following functions:\n\n${formattedExplanation}\n` +
+          `The program's purpose is to ${parsedResponse.overview.toLowerCase()}`;
       }
 
       return {
