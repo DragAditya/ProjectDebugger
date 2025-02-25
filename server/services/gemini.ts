@@ -1,10 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!, {
+  apiVersion: "v1"
+});
 
 export async function analyzeCode(code: string, language: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `You are an expert code debugger. Analyze this ${language} code and provide debugging feedback.
 
@@ -57,7 +59,7 @@ Requirements:
 
 export async function translateCode(code: string, fromLanguage: string, toLanguage: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `As an expert programmer, translate this code from ${fromLanguage} to ${toLanguage}.
 
@@ -103,7 +105,7 @@ Requirements:
 
 export async function explainCode(code: string, language: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `As an expert programmer, provide a detailed explanation of this ${language} code.
 
