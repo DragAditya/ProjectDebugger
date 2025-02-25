@@ -134,9 +134,17 @@ Requirements:
     try {
       const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
       // Ensure responses are strings
+      // Format detailed explanation if it's an array of line explanations
+      let formattedExplanation = parsedResponse.detailedExplanation;
+      if (Array.isArray(parsedResponse.detailedExplanation)) {
+        formattedExplanation = parsedResponse.detailedExplanation
+          .map(item => `${item.line}\n${item.explanation}\n`)
+          .join('\n');
+      }
+
       return {
         overview: typeof parsedResponse.overview === 'string' ? parsedResponse.overview : JSON.stringify(parsedResponse.overview),
-        detailedExplanation: typeof parsedResponse.detailedExplanation === 'string' ? parsedResponse.detailedExplanation : JSON.stringify(parsedResponse.detailedExplanation),
+        detailedExplanation: typeof formattedExplanation === 'string' ? formattedExplanation : JSON.stringify(formattedExplanation),
         keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map(c => typeof c === 'string' ? c : JSON.stringify(c)) : []
       };
     } catch (e) {
