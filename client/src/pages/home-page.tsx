@@ -13,7 +13,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Copy } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
@@ -125,6 +125,12 @@ export default function HomePage() {
     handleExplain();
   };
 
+  const handleCopy = () => {
+    const results = getResults();
+    const codeToCopy = results?.correctedCode || results?.translatedCode || '';
+    navigator.clipboard.writeText(codeToCopy);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -227,10 +233,20 @@ export default function HomePage() {
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Results</h2>
-            <DebugResults 
-              results={getResults()} 
-              language={targetLanguage}
-            />
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-2"
+                onClick={handleCopy}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <DebugResults 
+                results={getResults()} 
+                language={targetLanguage}
+              />
+            </div>
           </div>
         </div>
       </main>
