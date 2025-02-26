@@ -11,15 +11,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Ensure URL has proper format
-let formattedUrl = supabaseUrl
-if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-  formattedUrl = `https://${formattedUrl}`
-}
-
 try {
   // Validate URL format
-  new URL(formattedUrl)
+  new URL(supabaseUrl)
   console.log('Attempting to connect to Supabase project...')
 } catch (error) {
   console.error('Invalid Supabase URL format. Please check your VITE_SUPABASE_URL environment variable.')
@@ -27,7 +21,7 @@ try {
 }
 
 // Create Supabase client with proper configuration
-export const supabase = createClient(formattedUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
