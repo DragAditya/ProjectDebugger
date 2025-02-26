@@ -108,8 +108,10 @@ Requirements:
       try {
         // Clean up the response text
         text = text.replace(/^```json\n|\n```$/g, ''); // Remove code block markers
-        text = text.replace(/\\"/g, '"'); // Remove escaped quotes
-        text = text.replace(/\n/g, '\\n'); // Escape newlines properly
+        text = text.replace(/\\n/g, '\n'); // Handle escaped newlines
+        text = text.replace(/\\"/g, '"'); // Handle escaped quotes
+        text = text.replace(/\n/g, ' '); // Replace actual newlines with spaces
+        text = text.replace(/\s+/g, ' '); // Normalize whitespace
         const parsedResponse = JSON.parse(text);
         const translationResult = {
           translatedCode: parsedResponse.translatedCode || "",
