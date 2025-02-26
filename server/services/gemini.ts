@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!, {
@@ -7,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!, {
 
 async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
   let lastError: any;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = await operation();
@@ -19,7 +18,7 @@ async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number
       await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
   }
-  
+
   throw lastError;
 }
 
@@ -61,14 +60,14 @@ Requirements:
           explanation: parsedResponse.explanation || "No explanation provided",
           correctedCode: parsedResponse.correctedCode || code,
         };
-        
+
         if (!debugResult.explanation || debugResult.explanation === "No explanation provided") {
           throw new Error("Invalid explanation");
         }
-        
+
         return debugResult;
       } catch (e) {
-        console.error("Failed to parse Gemini response:", text);
+        console.error("Failed to parse Gemini response:", text, e);
         throw e;
       }
     } catch (error: any) {
@@ -104,22 +103,24 @@ Requirements:
 
       const result = await model.generateContent(prompt);
       const response = result.response;
-      const text = response.text();
+      let text = response.text();
 
       try {
+        // Attempt to fix unescaped quotes before parsing
+        text = text.replace(/(?<!\\)"(?![,}\]])/g, '\\"');
         const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
         const translationResult = {
           translatedCode: parsedResponse.translatedCode || "",
           explanation: parsedResponse.explanation || "No explanation provided"
         };
-        
+
         if (!translationResult.translatedCode || !translationResult.explanation) {
           throw new Error("Invalid translation response");
         }
-        
+
         return translationResult;
       } catch (e) {
-        console.error("Failed to parse Gemini response:", text);
+        console.error("Failed to parse Gemini response:", text, e);
         throw e;
       }
     } catch (error: any) {
@@ -167,14 +168,14 @@ Requirements:
           detailedExplanation: typeof parsedResponse.detailedExplanation === 'string' ? parsedResponse.detailedExplanation : JSON.stringify(parsedResponse.detailedExplanation),
           keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map(c => typeof c === 'string' ? c : JSON.stringify(c)) : []
         };
-        
+
         if (!explanation.overview || !explanation.detailedExplanation) {
           throw new Error("Invalid explanation response");
         }
-        
+
         return explanation;
       } catch (e) {
-        console.error("Failed to parse Gemini response:", text);
+        console.error("Failed to parse Gemini response:", text, e);
         throw e;
       }
     } catch (error: any) {
