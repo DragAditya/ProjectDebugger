@@ -119,6 +119,17 @@ const useLogoutMutation = () => {
   return useMutation({
     mutationFn: async () => {
       try {
+        // First clear server session
+        const response = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Server logout failed');
+        }
+
+        // Then clear client auth state
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
       } catch (error) {

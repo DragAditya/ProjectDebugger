@@ -100,8 +100,9 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+    req.session.destroy((err) => {
       if (err) return next(err);
+      res.clearCookie('connect.sid');
       res.sendStatus(200);
     });
   });
