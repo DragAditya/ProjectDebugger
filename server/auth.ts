@@ -100,11 +100,20 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
-    req.session.destroy((err) => {
-      if (err) return next(err);
-      res.clearCookie('connect.sid');
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) return next(err);
+        res.clearCookie('connect.sid', {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        });
+        res.sendStatus(200);
+      });
+    } else {
       res.sendStatus(200);
-    });
+    }
   });
 
   app.get("/api/user", (req, res) => {
