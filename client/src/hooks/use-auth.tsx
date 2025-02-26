@@ -55,17 +55,30 @@ const useRegisterMutation = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+    mutationFn: async ({ email, password, username }: { email: string; password: string; username: string }) => {
       try {
-        const { data, error } = await supabase.auth.signUp({
+        // First create the user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            data: {
+              username, // Store username in user metadata
+            },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
-        if (error) throw error;
-        return data;
+        if (authError) throw authError;
+
+        // Update the user's metadata with username
+        if (authData.user) {
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: { username },
+          });
+          if (updateError) throw updateError;
+        }
+
+        return authData;
       } catch (error) {
         if (error instanceof Error) {
           throw new Error(error.message);

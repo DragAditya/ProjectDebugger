@@ -80,22 +80,6 @@ export default function HomePage() {
     },
   });
 
-  const handleDebug = () => {
-    debugMutation.mutate({ code, language });
-  };
-
-  const handleTranslate = () => {
-    translateMutation.mutate({ 
-      code, 
-      fromLanguage: language,
-      toLanguage: targetLanguage 
-    });
-  };
-
-  const handleExplain = () => {
-    explainMutation.mutate({ code, language });
-  };
-
   // Get the appropriate results to display
   const getResults = () => {
     if (translateMutation.data) return translateMutation.data;
@@ -112,24 +96,29 @@ export default function HomePage() {
 
   const handleDebugWithReset = () => {
     clearOtherResults('debug');
-    handleDebug();
+    debugMutation.mutate({ code, language });
   };
 
   const handleTranslateWithReset = () => {
     clearOtherResults('translate');
-    handleTranslate();
+    translateMutation.mutate({ code, fromLanguage: language, toLanguage: targetLanguage });
   };
 
   const handleExplainWithReset = () => {
     clearOtherResults('explain');
-    handleExplain();
+    explainMutation.mutate({ code, language });
   };
 
   const handleCopy = () => {
     const results = getResults();
     const codeToCopy = results?.correctedCode || results?.translatedCode || '';
     navigator.clipboard.writeText(codeToCopy);
+    toast({
+      title: "Code copied to clipboard",
+    });
   };
+
+  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'User';
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,16 +127,16 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold">AI Code Debugger</h1>
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">
-              Welcome, {user?.username}
+              Welcome, {username}
             </span>
             <ThemeToggle />
             <Button
               variant="outline"
               size="sm"
               onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation?.isPending}
+              disabled={logoutMutation.isPending}
             >
-              {logoutMutation?.isPending ? (
+              {logoutMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <LogOut className="h-4 w-4" />
