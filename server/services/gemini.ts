@@ -1,14 +1,34 @@
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!, {
   apiVersion: "v1"
 });
 
-export async function analyzeCode(code: string, language: string) {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await operation();
+      if (result) return result;
+      throw new Error("Empty response");
+    } catch (error) {
+      lastError = error;
+      console.log(`Attempt ${attempt} failed, retrying...`);
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  
+  throw lastError;
+}
 
-    const prompt = `You are an expert code debugger. Analyze this ${language} code and provide debugging feedback.
+export async function analyzeCode(code: string, language: string) {
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const prompt = `You are an expert code debugger. Analyze this ${language} code and provide debugging feedback.
 
 Code to analyze:
 \`\`\`${language}
@@ -30,38 +50,40 @@ Requirements:
 5. Don't escape quotes in the correctedCode unless necessary
 6. Keep the same language as the input code`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
 
-    try {
-      const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
-      return {
-        issues: Array.isArray(parsedResponse.issues) ? parsedResponse.issues : [],
-        explanation: parsedResponse.explanation || "No explanation provided",
-        correctedCode: parsedResponse.correctedCode || code,
-      };
-    } catch (e) {
-      console.error("Failed to parse Gemini response:", text);
-      const codeMatch = text.match(/```(?:\w+)?\n([\s\S]*?)\n```/);
-      const extractedCode = codeMatch ? codeMatch[1].trim() : code;
-      return {
-        issues: ["Failed to analyze code properly"],
-        explanation: "The analysis encountered an error. Please try again with a simpler code snippet.",
-        correctedCode: extractedCode
-      };
+      try {
+        const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+        const debugResult = {
+          issues: Array.isArray(parsedResponse.issues) ? parsedResponse.issues : [],
+          explanation: parsedResponse.explanation || "No explanation provided",
+          correctedCode: parsedResponse.correctedCode || code,
+        };
+        
+        if (!debugResult.explanation || debugResult.explanation === "No explanation provided") {
+          throw new Error("Invalid explanation");
+        }
+        
+        return debugResult;
+      } catch (e) {
+        console.error("Failed to parse Gemini response:", text);
+        throw e;
+      }
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      throw error;
     }
-  } catch (error: any) {
-    console.error("Gemini API error:", error);
-    throw new Error(error.message || "Failed to analyze code");
-  }
+  });
 }
 
 export async function translateCode(code: string, fromLanguage: string, toLanguage: string) {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `As an expert programmer, translate this code from ${fromLanguage} to ${toLanguage}.
+      const prompt = `As an expert programmer, translate this code from ${fromLanguage} to ${toLanguage}.
 
 Original code (${fromLanguage}):
 \`\`\`${fromLanguage}
@@ -80,34 +102,39 @@ Requirements:
 3. Include any necessary imports or setup code
 4. Explain any significant changes or language-specific adaptations`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
 
-    try {
-      const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
-      return {
-        translatedCode: parsedResponse.translatedCode || "",
-        explanation: parsedResponse.explanation || "No explanation provided"
-      };
-    } catch (e) {
-      console.error("Failed to parse Gemini response:", text);
-      return {
-        translatedCode: "",
-        explanation: "Failed to translate the code. Please try again with a simpler code snippet."
-      };
+      try {
+        const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+        const translationResult = {
+          translatedCode: parsedResponse.translatedCode || "",
+          explanation: parsedResponse.explanation || "No explanation provided"
+        };
+        
+        if (!translationResult.translatedCode || !translationResult.explanation) {
+          throw new Error("Invalid translation response");
+        }
+        
+        return translationResult;
+      } catch (e) {
+        console.error("Failed to parse Gemini response:", text);
+        throw e;
+      }
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      throw error;
     }
-  } catch (error: any) {
-    console.error("Gemini API error:", error);
-    throw new Error(error.message || "Failed to translate code");
-  }
+  });
 }
 
 export async function explainCode(code: string, language: string) {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `As an expert programmer, provide a detailed explanation of this ${language} code.
+      const prompt = `As an expert programmer, provide a detailed explanation of this ${language} code.
 
 Code to explain:
 \`\`\`${language}
@@ -127,51 +154,30 @@ Requirements:
 3. Highlight important programming concepts used
 4. Include best practices and potential improvements`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
 
-    try {
-      const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
-      // Ensure responses are strings
-      // Format detailed explanation into a narrative format
-      let formattedExplanation = parsedResponse.detailedExplanation;
-      if (Array.isArray(parsedResponse.detailedExplanation)) {
-        const functionGroups = parsedResponse.detailedExplanation.reduce((acc, item) => {
-          if (item.line.startsWith('def ')) {
-            acc.push([item]);
-          } else {
-            acc[acc.length - 1]?.push(item);
-          }
-          return acc;
-        }, []);
-
-        formattedExplanation = functionGroups.map(group => {
-          const functionName = group[0].line.split('def ')[1].split('(')[0];
-          const params = group[0].line.split('(')[1].split(')')[0];
-          const description = group.map(item => item.explanation).join(' ');
-          return `${functionName}(${params}): ${description}\n`;
-        }).join('\n');
-
-        formattedExplanation = `This code defines the following functions:\n\n${formattedExplanation}\n` +
-          `The program's purpose is to ${parsedResponse.overview.toLowerCase()}`;
+      try {
+        const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+        const explanation = {
+          overview: typeof parsedResponse.overview === 'string' ? parsedResponse.overview : JSON.stringify(parsedResponse.overview),
+          detailedExplanation: typeof parsedResponse.detailedExplanation === 'string' ? parsedResponse.detailedExplanation : JSON.stringify(parsedResponse.detailedExplanation),
+          keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map(c => typeof c === 'string' ? c : JSON.stringify(c)) : []
+        };
+        
+        if (!explanation.overview || !explanation.detailedExplanation) {
+          throw new Error("Invalid explanation response");
+        }
+        
+        return explanation;
+      } catch (e) {
+        console.error("Failed to parse Gemini response:", text);
+        throw e;
       }
-
-      return {
-        overview: typeof parsedResponse.overview === 'string' ? parsedResponse.overview : JSON.stringify(parsedResponse.overview),
-        detailedExplanation: typeof formattedExplanation === 'string' ? formattedExplanation : JSON.stringify(formattedExplanation),
-        keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map(c => typeof c === 'string' ? c : JSON.stringify(c)) : []
-      };
-    } catch (e) {
-      console.error("Failed to parse Gemini response:", text);
-      return {
-        overview: "Failed to analyze the code",
-        detailedExplanation: "Please try again with a simpler code snippet",
-        keyComponents: []
-      };
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      throw error;
     }
-  } catch (error: any) {
-    console.error("Gemini API error:", error);
-    throw new Error(error.message || "Failed to explain code");
-  }
+  });
 }
