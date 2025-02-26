@@ -46,14 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refetch]);
 
   const signInMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const { data, error } = await supabase.auth.signInWithPassword(credentials);
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Invalid email or password');
+        }
+        throw error;
+      }
       return data;
+    },
+    onSuccess: () => {
+      refetch();
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -62,27 +70,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     },
-    onSuccess: () => {
-      refetch();
-    },
   });
 
   const signUpMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+    mutationFn: async (credentials: { email: string; password: string }) => {
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        ...credentials,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          throw new Error('An account with this email already exists');
+        }
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
       toast({
-        title: "Registration successful",
+        title: "Account created",
         description: "Please check your email to verify your account.",
       });
     },
@@ -102,6 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       refetch();
+      toast({
+        title: "Signed out successfully",
+        description: "Come back soon!",
+      });
     },
     onError: (error: Error) => {
       toast({

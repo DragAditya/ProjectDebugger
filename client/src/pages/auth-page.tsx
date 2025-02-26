@@ -20,8 +20,8 @@ import { motion } from "framer-motion";
 import { z } from "zod";
 
 const authSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 
 type AuthForm = z.infer<typeof authSchema>;
@@ -70,7 +70,7 @@ export default function AuthPage() {
         </div>
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
-            <Tabs defaultValue="login">
+            <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid grid-cols-2 w-full mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -92,7 +92,13 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" {...field} />
+                              <Input 
+                                type="email" 
+                                placeholder="your@email.com"
+                                autoComplete="email"
+                                disabled={isLoading}
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -105,7 +111,13 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input 
+                                type="password"
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                disabled={isLoading}
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -116,10 +128,14 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={isLoading}
                       >
-                        {isLoading && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Signing in...
+                          </>
+                        ) : (
+                          "Sign in"
                         )}
-                        Login
                       </Button>
                     </form>
                   </Form>
@@ -142,7 +158,13 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" {...field} />
+                              <Input 
+                                type="email"
+                                placeholder="your@email.com"
+                                autoComplete="email"
+                                disabled={isLoading}
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -155,7 +177,13 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input 
+                                type="password"
+                                placeholder="••••••••"
+                                autoComplete="new-password"
+                                disabled={isLoading}
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -166,10 +194,14 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={isLoading}
                       >
-                        {isLoading && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating account...
+                          </>
+                        ) : (
+                          "Create account"
                         )}
-                        Register
                       </Button>
                     </form>
                   </Form>
