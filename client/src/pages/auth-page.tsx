@@ -10,29 +10,37 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { insertUserSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Redirect } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { motion } from "framer-motion";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type AuthForm = z.infer<typeof authSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, signIn, signUp, isLoading } = useAuth();
 
-  const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema),
+  const loginForm = useForm<AuthForm>({
+    resolver: zodResolver(authSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  const registerForm = useForm({
-    resolver: zodResolver(insertUserSchema),
+  const registerForm = useForm<AuthForm>({
+    resolver: zodResolver(authSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -41,8 +49,21 @@ export default function AuthPage() {
     return <Redirect to="/" />;
   }
 
+  const formAnimation = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.3, ease: "easeInOut" }
+  };
+
   return (
-    <div className="min-h-screen grid md:grid-cols-2">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen grid md:grid-cols-2"
+    >
       <div className="flex items-center justify-center p-8 relative">
         <div className="absolute top-4 right-4">
           <ThemeToggle />
@@ -50,112 +71,121 @@ export default function AuthPage() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <Tabs defaultValue="login">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="grid grid-cols-2 w-full mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form
-                    onSubmit={loginForm.handleSubmit((data) =>
-                      loginMutation.mutate(data)
-                    )}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                <motion.div {...formAnimation}>
+                  <Form {...loginForm}>
+                    <form
+                      onSubmit={loginForm.handleSubmit((data) =>
+                        signIn(data.email, data.password)
                       )}
-                    />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loginMutation.isPending}
+                      className="space-y-4"
                     >
-                      {loginMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Login
-                    </Button>
-                  </form>
-                </Form>
+                      <FormField
+                        control={loginForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                      >
+                        {isLoading && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Login
+                      </Button>
+                    </form>
+                  </Form>
+                </motion.div>
               </TabsContent>
 
               <TabsContent value="register">
-                <Form {...registerForm}>
-                  <form
-                    onSubmit={registerForm.handleSubmit((data) =>
-                      registerMutation.mutate(data)
-                    )}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                <motion.div {...formAnimation}>
+                  <Form {...registerForm}>
+                    <form
+                      onSubmit={registerForm.handleSubmit((data) =>
+                        signUp(data.email, data.password)
                       )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={registerMutation.isPending}
+                      className="space-y-4"
                     >
-                      {registerMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Register
-                    </Button>
-                  </form>
-                </Form>
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                      >
+                        {isLoading && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Register
+                      </Button>
+                    </form>
+                  </Form>
+                </motion.div>
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
       </div>
 
-      <div className="hidden md:flex bg-primary/5 p-12 items-center justify-center">
+      <motion.div 
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="hidden md:flex bg-primary/5 p-12 items-center justify-center"
+      >
         <div className="max-w-lg">
           <h1 className="text-4xl font-bold mb-4">AI Code Debugger</h1>
           <p className="text-lg text-muted-foreground">
@@ -164,7 +194,7 @@ export default function AuthPage() {
             quality.
           </p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
