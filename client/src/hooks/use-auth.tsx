@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -105,13 +105,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch,
   } = useQuery({
     queryKey: ["auth-user"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.user ?? null;
     },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 30, // Keep data in cache for 30 minutes
   });
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        refetch();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [refetch]);
 
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
