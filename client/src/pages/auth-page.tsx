@@ -49,11 +49,19 @@ export default function AuthPage() {
     return <Redirect to="/" />;
   }
 
+  const formAnimation = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.3, ease: "easeInOut" }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
       className="min-h-screen grid md:grid-cols-2"
     >
       <div className="flex items-center justify-center p-8 relative">
@@ -63,19 +71,13 @@ export default function AuthPage() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <Tabs defaultValue="login">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="grid grid-cols-2 w-full mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
-                <motion.div
-                  key="login-form"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.div {...formAnimation}>
                   <Form {...loginForm}>
                     <form
                       onSubmit={loginForm.handleSubmit((data) =>
@@ -125,13 +127,7 @@ export default function AuthPage() {
               </TabsContent>
 
               <TabsContent value="register">
-                <motion.div
-                  key="register-form"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.div {...formAnimation}>
                   <Form {...registerForm}>
                     <form
                       onSubmit={registerForm.handleSubmit((data) =>
@@ -187,7 +183,7 @@ export default function AuthPage() {
       <motion.div 
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
         className="hidden md:flex bg-primary/5 p-12 items-center justify-center"
       >
         <div className="max-w-lg">

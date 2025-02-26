@@ -24,16 +24,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     refetch
   } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["auth-user"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.user ?? null;
     },
   });
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      refetch();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        refetch();
+      }
     });
 
     return () => {
@@ -43,8 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) throw error;
+      return data;
     },
     onError: (error: Error) => {
       toast({
@@ -53,18 +62,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     },
+    onSuccess: () => {
+      refetch();
+    },
   });
 
   const signUpMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
+
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       toast({
@@ -85,6 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+    },
+    onSuccess: () => {
+      refetch();
     },
     onError: (error: Error) => {
       toast({
