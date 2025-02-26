@@ -8,6 +8,7 @@ import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute, AuthCallback } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./components/theme-provider";
+import LogsPage from "@/pages/logs-page"; // Added import for LogsPage
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
         <AuthPage />
       </Route>
       <ProtectedRoute path="/home" component={HomePage} />
+      <ProtectedRoute path="/logs" component={LogsPage} />
       <Route path="/">
         <AuthPage />
       </Route>

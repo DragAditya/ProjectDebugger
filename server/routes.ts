@@ -28,6 +28,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/logs", (req, res) => {
+    // Example logs - replace with your actual logging system
+    const logs = [
+      {
+        timestamp: new Date().toISOString(),
+        level: "info",
+        message: "Server started successfully",
+      },
+      {
+        timestamp: new Date(Date.now() - 5000).toISOString(),
+        level: "warn",
+        message: "High memory usage detected",
+        details: { usage: "85%" },
+      },
+      {
+        timestamp: new Date(Date.now() - 10000).toISOString(),
+        level: "error",
+        message: "Database connection failed",
+        details: { error: "Connection timeout" },
+      },
+    ];
+    res.json(logs);
+  });
+
   app.post("/api/explain", async (req, res) => {
     try {
       const { code, language } = req.body;
