@@ -8,9 +8,9 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => void;
+  signUp: (email: string, password: string) => void;
+  signOut: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       refetch();
     });
 
@@ -42,8 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refetch]);
 
   const signInMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const { error } = await supabase.auth.signInWithPassword(credentials);
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     },
     onError: (error: Error) => {
@@ -56,9 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const signUpMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const { error } = await supabase.auth.signUp({
-        ...credentials,
+        email,
+        password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -100,9 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: user ?? null,
         isLoading,
         error: error as Error | null,
-        signIn: signInMutation.mutate,
-        signUp: signUpMutation.mutate,
-        signOut: signOutMutation.mutate,
+        signIn: (email: string, password: string) => 
+          signInMutation.mutate({ email, password }),
+        signUp: (email: string, password: string) => 
+          signUpMutation.mutate({ email, password }),
+        signOut: () => signOutMutation.mutate()
       }}
     >
       {children}
