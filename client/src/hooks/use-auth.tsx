@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -8,56 +8,21 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
-  signIn: (email: string, password: string) => void;
-  signUp: (email: string, password: string) => void;
-  signOut: () => void;
+  loginMutation: ReturnType<typeof useLoginMutation>;
+  logoutMutation: ReturnType<typeof useLogoutMutation>;
+  registerMutation: ReturnType<typeof useRegisterMutation>;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+const useLoginMutation = () => {
   const { toast } = useToast();
 
-  const {
-    data: user,
-    error,
-    isLoading,
-    refetch
-  } = useQuery({
-    queryKey: ["auth-user"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.user ?? null;
-    },
-  });
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        refetch();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [refetch]);
-
-  const signInMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword(credentials);
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Invalid email or password');
-        }
-        throw error;
-      }
+  return useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      refetch();
       toast({
         title: "Welcome back!",
         description: "You've successfully signed in.",
@@ -71,21 +36,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+};
 
-  const signUpMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
+const useRegisterMutation = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const { data, error } = await supabase.auth.signUp({
-        ...credentials,
+        email,
+        password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) {
-        if (error.message.includes('User already registered')) {
-          throw new Error('An account with this email already exists');
-        }
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -102,14 +67,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+};
 
-  const signOutMutation = useMutation({
+const useLogoutMutation = () => {
+  const { toast } = useToast();
+
+  return useMutation({
     mutationFn: async () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     },
     onSuccess: () => {
-      refetch();
       toast({
         title: "Signed out successfully",
         description: "Come back soon!",
@@ -123,6 +91,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+};
+
+export const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const {
+    data: user,
+    error,
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ["auth-user"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.user ?? null;
+    },
+  });
+
+  const loginMutation = useLoginMutation();
+  const registerMutation = useRegisterMutation();
+  const logoutMutation = useLogoutMutation();
 
   return (
     <AuthContext.Provider
@@ -130,11 +119,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: user ?? null,
         isLoading,
         error: error as Error | null,
-        signIn: (email: string, password: string) => 
-          signInMutation.mutate({ email, password }),
-        signUp: (email: string, password: string) => 
-          signUpMutation.mutate({ email, password }),
-        signOut: () => signOutMutation.mutate()
+        loginMutation,
+        logoutMutation,
+        registerMutation,
       }}
     >
       {children}

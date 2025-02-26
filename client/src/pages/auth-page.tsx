@@ -27,7 +27,7 @@ const authSchema = z.object({
 type AuthForm = z.infer<typeof authSchema>;
 
 export default function AuthPage() {
-  const { user, signIn, signUp, isLoading } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
 
   const loginForm = useForm<AuthForm>({
     resolver: zodResolver(authSchema),
@@ -81,7 +81,7 @@ export default function AuthPage() {
                   <Form {...loginForm}>
                     <form
                       onSubmit={loginForm.handleSubmit((data) =>
-                        signIn(data.email, data.password)
+                        loginMutation.mutate(data)
                       )}
                       className="space-y-4"
                     >
@@ -96,7 +96,7 @@ export default function AuthPage() {
                                 type="email" 
                                 placeholder="your@email.com"
                                 autoComplete="email"
-                                disabled={isLoading}
+                                disabled={loginMutation.isPending}
                                 {...field} 
                               />
                             </FormControl>
@@ -115,7 +115,7 @@ export default function AuthPage() {
                                 type="password"
                                 placeholder="••••••••"
                                 autoComplete="current-password"
-                                disabled={isLoading}
+                                disabled={loginMutation.isPending}
                                 {...field} 
                               />
                             </FormControl>
@@ -126,9 +126,9 @@ export default function AuthPage() {
                       <Button
                         type="submit"
                         className="w-full"
-                        disabled={isLoading}
+                        disabled={loginMutation.isPending}
                       >
-                        {isLoading ? (
+                        {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Signing in...
@@ -147,7 +147,7 @@ export default function AuthPage() {
                   <Form {...registerForm}>
                     <form
                       onSubmit={registerForm.handleSubmit((data) =>
-                        signUp(data.email, data.password)
+                        registerMutation.mutate(data)
                       )}
                       className="space-y-4"
                     >
@@ -162,7 +162,7 @@ export default function AuthPage() {
                                 type="email"
                                 placeholder="your@email.com"
                                 autoComplete="email"
-                                disabled={isLoading}
+                                disabled={registerMutation.isPending}
                                 {...field} 
                               />
                             </FormControl>
@@ -181,7 +181,7 @@ export default function AuthPage() {
                                 type="password"
                                 placeholder="••••••••"
                                 autoComplete="new-password"
-                                disabled={isLoading}
+                                disabled={registerMutation.isPending}
                                 {...field} 
                               />
                             </FormControl>
@@ -192,9 +192,9 @@ export default function AuthPage() {
                       <Button
                         type="submit"
                         className="w-full"
-                        disabled={isLoading}
+                        disabled={registerMutation.isPending}
                       >
-                        {isLoading ? (
+                        {registerMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Creating account...
