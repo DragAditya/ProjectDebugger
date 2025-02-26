@@ -105,7 +105,7 @@ export default function DebugResults({ results, language = "javascript" }: Debug
               ) : (
                 <CheckCircle className="h-5 w-5 text-green-500" />
               )}
-              Issues Found
+              {results.issues && results.issues.length > 0 ? "Issues Found" : "No Issues Found"}
             </h4>
             <ul className="space-y-2 mb-4">
               {results.issues && results.issues.map((issue, index) => (
