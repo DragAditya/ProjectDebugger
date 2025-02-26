@@ -144,7 +144,7 @@ ${code}
 Provide your response in this exact JSON format:
 {
   "overview": "Brief overview of what the code does",
-  "detailedExplanation": "Line-by-line or section-by-section explanation",
+  "detailedExplanation": "Line-by-line or section-by-section explanation, With No Markdown And Formatting, Only Plain Text",
   "keyComponents": ["List of important functions, variables, or concepts used"]
 }
 
@@ -152,7 +152,9 @@ Requirements:
 1. Explain the purpose and functionality
 2. Break down complex logic
 3. Highlight important programming concepts used
-4. Include best practices and potential improvements`;
+4. Include best practices and potential improvements
+5. Use plain text formatting 
+6. Avoid escaping quotes in the detailedExplanation field`;
 
       const result = await model.generateContent(prompt);
       const response = result.response;
