@@ -131,7 +131,7 @@ const useLogoutMutation = () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (!response.ok) {
           throw new Error('Server logout failed');
         }
@@ -189,10 +189,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', _event, !!session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[Auth Event]', { event, sessionExists: !!session });
       refetch();
     });
 

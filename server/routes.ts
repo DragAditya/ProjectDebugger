@@ -6,6 +6,42 @@ import { analyzeCode, translateCode, explainCode } from "./services/gemini";
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  app.use((req, res, next) => {
+    const start = Date.now();
+    const path = req.path;
+    let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+    // Log request details
+    const requestLog = {
+      timestamp: new Date().toISOString(),
+      type: 'request',
+      method: req.method,
+      path: req.path,
+      query: req.query,
+      body: req.body,
+      headers: req.headers,
+      ip: req.ip
+    };
+    console.log(JSON.stringify(requestLog));
+
+    const originalResJson = res.json;
+    res.json = function (bodyJson, ...args) {
+      capturedJsonResponse = bodyJson;
+      const responseLog = {
+        timestamp: new Date().toISOString(),
+        type: 'response',
+        path: path,
+        status: res.statusCode,
+        body: capturedJsonResponse
+      };
+      console.log(JSON.stringify(responseLog));
+      return originalResJson.apply(res, [bodyJson, ...args]);
+    };
+
+    next();
+  });
+
+
   app.post("/api/debug", async (req, res) => {
     try {
       const { code, language } = req.body;
