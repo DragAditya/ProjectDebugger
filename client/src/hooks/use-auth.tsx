@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
+import { User, AuthError } from "@supabase/supabase-js";
 import { useLocation } from "wouter";
 
 type AuthContextType = {
@@ -25,10 +25,15 @@ const useLoginMutation = () => {
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            throw new Error('Invalid email or password');
+          }
+          throw error;
+        }
         return data;
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof AuthError) {
           throw new Error(error.message);
         }
         throw new Error('Failed to sign in');
@@ -63,12 +68,17 @@ const useRegisterMutation = () => {
           password,
           options: {
             data: {
-              username, // Store username in user metadata
+              username,
             },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
-        if (authError) throw authError;
+        if (authError) {
+          if (authError.message.includes('User already registered')) {
+            throw new Error('An account with this email already exists');
+          }
+          throw authError;
+        }
 
         // Update the user's metadata with username
         if (authData.user) {
@@ -80,7 +90,7 @@ const useRegisterMutation = () => {
 
         return authData;
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof AuthError) {
           throw new Error(error.message);
         }
         throw new Error('Failed to create account');
@@ -111,7 +121,7 @@ const useLogoutMutation = () => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof AuthError) {
           throw new Error(error.message);
         }
         throw new Error('Failed to sign out');
@@ -146,9 +156,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery({
     queryKey: ["auth-user"],
     queryFn: async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return session?.user ?? null;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        return session?.user ?? null;
+      } catch (error) {
+        console.error('Failed to get session:', error);
+        return null;
+      }
     },
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     gcTime: 1000 * 60 * 30, // Keep data in cache for 30 minutes

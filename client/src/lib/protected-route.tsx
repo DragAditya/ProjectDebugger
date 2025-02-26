@@ -1,8 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
-import { supabase } from "./supabase";
-import { useEffect, useState } from "react";
 
 export function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
