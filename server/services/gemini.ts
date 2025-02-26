@@ -89,7 +89,7 @@ Original code (${fromLanguage}):
 ${code}
 \`\`\`
 
-Provide your response in this exact JSON format:
+Provide your response in this exact JSON format with no additional text or markdown:
 {
   "translatedCode": "The complete translated code",
   "explanation": "Explanation of the key differences and changes made during translation"
@@ -99,7 +99,10 @@ Requirements:
 1. Maintain the same functionality and logic
 2. Use idiomatic patterns for the target language
 3. Include any necessary imports or setup code
-4. Explain any significant changes or language-specific adaptations`;
+4. Explain any significant changes or language-specific adaptations
+5. Include best practices and potential improvements
+6. Use plain text formatting 
+7. Avoid escaping quotes in the detailedExplanation field`;
 
       const result = await model.generateContent(prompt);
       const response = result.response;
