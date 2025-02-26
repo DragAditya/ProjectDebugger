@@ -145,9 +145,9 @@ export default function HomePage() {
               variant="outline"
               size="sm"
               onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
+              disabled={logoutMutation?.isPending}
             >
-              {logoutMutation.isPending ? (
+              {logoutMutation?.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <LogOut className="h-4 w-4" />
