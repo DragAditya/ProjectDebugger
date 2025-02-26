@@ -12,7 +12,7 @@ export function AuthCallback() {
       try {
         const { error } = await supabase.auth.getSession();
         if (error) throw error;
-        window.location.href = "/";
+        window.location.href = "/home";
       } catch (err) {
         console.error("Auth callback error:", err);
         setError(err instanceof Error ? err.message : "Authentication failed");

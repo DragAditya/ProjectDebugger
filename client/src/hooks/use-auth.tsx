@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { useLocation } from "wouter";
 
 type AuthContextType = {
   user: User | null;
@@ -15,6 +16,7 @@ type AuthContextType = {
 
 const useLoginMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
@@ -27,6 +29,7 @@ const useLoginMutation = () => {
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
+      setLocation("/home");
     },
     onError: (error: Error) => {
       toast({
@@ -71,6 +74,7 @@ const useRegisterMutation = () => {
 
 const useLogoutMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   return useMutation({
     mutationFn: async () => {
@@ -82,6 +86,7 @@ const useLogoutMutation = () => {
         title: "Signed out successfully",
         description: "Come back soon!",
       });
+      setLocation("/auth");
     },
     onError: (error: Error) => {
       toast({
@@ -100,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-    refetch
   } = useQuery({
     queryKey: ["auth-user"],
     queryFn: async () => {
