@@ -20,15 +20,20 @@ import { Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 
+import { ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription } from "@/components/ui/toast";
+
+const MAX_RETRIES = 3;
+
 export default function AuthPage() {
+  const [showToast, setShowToast] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState("");
   const { user, loginMutation, registerMutation } = useAuth();
 
   const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(insertUserSchema.pick({ email: true, password: true })),
     defaultValues: {
-      username: "",
-      password: "",
       email: "",
+      password: "",
     },
   });
 
@@ -50,6 +55,11 @@ export default function AuthPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ 
+          type: "spring",
+          stiffness: 100,
+          damping: 20
+        }}
         className="flex items-center justify-center p-8"
       >
         <Card className="w-full max-w-md">
@@ -62,7 +72,21 @@ export default function AuthPage() {
 
               <TabsContent value="login">
                 <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))}>
+                  <form onSubmit={loginForm.handleSubmit(async (data) => {
+                    let attempts = 0;
+                    while (attempts < MAX_RETRIES) {
+                      try {
+                        await loginMutation.mutateAsync(data);
+                        break;
+                      } catch (error: any) {
+                        attempts++;
+                        if (attempts === MAX_RETRIES) {
+                          setToastMessage(error.message || "Login failed after multiple attempts");
+                          setShowToast(true);
+                        }
+                      }
+                    }
+                  })}>
                     <div className="space-y-4">
                       <FormField
                         control={loginForm.control}
@@ -178,6 +202,18 @@ export default function AuthPage() {
           </p>
         </motion.div>
       </div>
+    <ToastProvider>
+        {showToast && (
+          <Toast 
+            variant="destructive"
+            onOpenChange={(open) => !open && setShowToast(false)}
+          >
+            <ToastTitle>Error</ToastTitle>
+            <ToastDescription>{toastMessage}</ToastDescription>
+          </Toast>
+        )}
+        <ToastViewport />
+      </ToastProvider>
     </div>
   );
 }
