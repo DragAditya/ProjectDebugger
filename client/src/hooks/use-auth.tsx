@@ -114,6 +114,7 @@ const useRegisterMutation = () => {
 
 const useLogoutMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   return useMutation({
     mutationFn: async () => {
