@@ -106,9 +106,11 @@ Requirements:
       let text = response.text();
 
       try {
-        // Attempt to fix unescaped quotes before parsing
-        text = text.replace(/(?<!\\)"(?![,}\]])/g, '\\"');
-        const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+        // Clean up the response text
+        text = text.replace(/^```json\n|\n```$/g, ''); // Remove code block markers
+        text = text.replace(/\\"/g, '"'); // Remove escaped quotes
+        text = text.replace(/\n/g, '\\n'); // Escape newlines properly
+        const parsedResponse = JSON.parse(text);
         const translationResult = {
           translatedCode: parsedResponse.translatedCode || "",
           explanation: parsedResponse.explanation || "No explanation provided"
