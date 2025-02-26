@@ -20,9 +20,19 @@ const useLoginMutation = () => {
 
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error('Failed to sign in');
+      }
     },
     onSuccess: () => {
       toast({
@@ -46,15 +56,22 @@ const useRegisterMutation = () => {
 
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error('Failed to create account');
+      }
     },
     onSuccess: () => {
       toast({
@@ -74,19 +91,26 @@ const useRegisterMutation = () => {
 
 const useLogoutMutation = () => {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
   return useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error('Failed to sign out');
+      }
     },
     onSuccess: () => {
       toast({
         title: "Signed out successfully",
         description: "Come back soon!",
       });
-      setLocation("/auth");
+      // Force a full page reload to clear all auth state
+      window.location.href = "/auth";
     },
     onError: (error: Error) => {
       toast({
@@ -109,7 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery({
     queryKey: ["auth-user"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
       return session?.user ?? null;
     },
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
@@ -121,9 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        refetch();
-      }
+      console.log('Auth state changed:', _event, !!session);
+      refetch();
     });
 
     return () => {
