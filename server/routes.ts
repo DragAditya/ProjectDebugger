@@ -9,10 +9,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/debug", async (req, res) => {
     try {
       const { code, language } = req.body;
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
       const debugResult = await analyzeCode(code, language);
       res.json(debugResult);
     } catch (error: any) {
@@ -24,10 +20,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/translate", async (req, res) => {
     try {
       const { code, fromLanguage, toLanguage } = req.body;
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
       const result = await translateCode(code, fromLanguage, toLanguage);
       res.json(result);
     } catch (error: any) {
@@ -39,10 +31,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/explain", async (req, res) => {
     try {
       const { code, language } = req.body;
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
       const result = await explainCode(code, language);
       res.json(result);
     } catch (error: any) {
