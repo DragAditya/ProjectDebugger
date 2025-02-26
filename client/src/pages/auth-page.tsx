@@ -1,219 +1,103 @@
-
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { insertUserSchema } from "@shared/schema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Redirect } from "wouter";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { motion } from "framer-motion";
-
-import { ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription } from "@/components/ui/toast";
-
-const MAX_RETRIES = 3;
+import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AuthPage() {
-  const [showToast, setShowToast] = React.useState(false);
-  const [toastMessage, setToastMessage] = React.useState("");
-  const { user, loginMutation, registerMutation } = useAuth();
+  const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const { login, register } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema.pick({ email: true, password: true })),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!username || !password) {
+        toast({
+          title: "Error",
+          description: "Please fill in all fields",
+          variant: "destructive"
+        });
+        return;
+      }
 
-  const registerForm = useForm({
-    resolver: zodResolver(insertUserSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      email: "",
-    },
-  });
-
-  if (user) {
-    return <Redirect to="/" />;
-  }
+      if (isLogin) {
+        await login(username, password);
+      } else {
+        await register(username, password);
+      }
+      setLocation("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Authentication failed",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ 
-          type: "spring",
-          stiffness: 100,
-          damping: 20
-        }}
-        className="flex items-center justify-center p-8"
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
       >
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(async (data) => {
-                    let attempts = 0;
-                    while (attempts < MAX_RETRIES) {
-                      try {
-                        await loginMutation.mutateAsync(data);
-                        break;
-                      } catch (error: any) {
-                        attempts++;
-                        if (attempts === MAX_RETRIES) {
-                          setToastMessage(error.message || "Login failed after multiple attempts");
-                          setShowToast(true);
-                        }
-                      }
-                    }
-                  })}>
-                    <div className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button 
-                        type="submit" 
-                        className="w-full"
-                        disabled={loginMutation.isPending}
-                      >
-                        {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Login
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))}>
-                    <div className="space-y-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button 
-                        type="submit" 
-                        className="w-full"
-                        disabled={registerMutation.isPending}
-                      >
-                        {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Register
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
+        <Card className="w-full max-w-md p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isLogin ? "login" : "register"}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h1 className="text-2xl font-bold text-center mb-6">
+                {isLogin ? "Welcome Back" : "Create Account"}
+              </h1>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  {isLogin ? "Login" : "Register"}
+                </Button>
+              </form>
+              <p className="text-center mt-4 text-sm text-muted-foreground">
+                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                <Button
+                  variant="link"
+                  className="ml-1 p-0"
+                  onClick={() => setIsLogin(!isLogin)}
+                >
+                  {isLogin ? "Register" : "Login"}
+                </Button>
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </Card>
       </motion.div>
-
-      <div className="hidden md:flex bg-primary/5 p-12 items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-lg"
-        >
-          <h1 className="text-4xl font-bold mb-4">AI Code Debugger</h1>
-          <p className="text-lg text-muted-foreground">
-            Debug your code with the power of AI. Get instant feedback and
-            explanations for common programming errors and optimize your code
-            quality.
-          </p>
-        </motion.div>
-      </div>
-    <ToastProvider>
-        {showToast && (
-          <Toast 
-            variant="destructive"
-            onOpenChange={(open) => !open && setShowToast(false)}
-          >
-            <ToastTitle>Error</ToastTitle>
-            <ToastDescription>{toastMessage}</ToastDescription>
-          </Toast>
-        )}
-        <ToastViewport />
-      </ToastProvider>
     </div>
   );
 }
