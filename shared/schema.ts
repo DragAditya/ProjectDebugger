@@ -8,9 +8,14 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = z.object({
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username cannot exceed 30 characters")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores and hyphens"),
+  password: z.string()
+    .min(6, "Password must be at least 6 characters")
+    .max(100, "Password cannot exceed 100 characters")
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
