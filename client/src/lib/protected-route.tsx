@@ -1,6 +1,9 @@
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { supabase } from "./supabase";
 
 export function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
@@ -46,20 +49,15 @@ export function ProtectedRoute({
 }) {
   const { user, isLoading } = useAuth();
 
-  return (
-    <Route path={path}>
-      {isLoading ? (
+  if (isLoading) {
+    return (
+      <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
-      ) : user ? (
-        <Component />
-      ) : (
-        <Redirect to="/auth" />
-      )}
-    </Route>
-  );
-}
+      </Route>
+    );
+  }
 
   if (!user) {
     return (
