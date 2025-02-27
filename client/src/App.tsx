@@ -12,33 +12,29 @@ import { AuthProvider } from "./hooks/use-auth";
 
 function Router() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Wrapper for pages that need the dot pattern */}
-      <Switch>
-        <Route path="/home">
-          {/* Home page without background pattern */}
-          <HomePage />
-        </Route>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background pattern with reduced opacity */}
+      <div className="fixed inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-25 pointer-events-none" />
 
-        <Route path="*">
-          {/* All other routes with background pattern */}
-          <div className="min-h-screen bg-background relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-35" />
-            <div className="relative z-10">
-              <Switch>
-                <Route path="/auth/callback" component={AuthCallback} />
-                <Route path="/auth">
-                  <AuthPage />
-                </Route>
-                <Route path="/">
-                  <Hero />
-                </Route>
-                <Route component={NotFound} />
-              </Switch>
+      {/* Content wrapper with proper z-index */}
+      <div className="relative z-10">
+        <Switch>
+          <Route path="/home">
+            {/* Additional background color for home page components */}
+            <div className="min-h-screen bg-background/95">
+              <HomePage />
             </div>
-          </div>
-        </Route>
-      </Switch>
+          </Route>
+          <Route path="/auth/callback" component={AuthCallback} />
+          <Route path="/auth">
+            <AuthPage />
+          </Route>
+          <Route path="/">
+            <Hero />
+          </Route>
+          <Route component={NotFound} />
+        </Switch>
+      </div>
     </div>
   );
 }
