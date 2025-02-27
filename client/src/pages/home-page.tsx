@@ -15,6 +15,29 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogOut, Copy } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+};
 
 export default function HomePage() {
   const { logoutMutation, user } = useAuth();
@@ -119,8 +142,16 @@ export default function HomePage() {
   const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b bg-background/95 backdrop-blur-sm">
+    <motion.div 
+      className="min-h-screen"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.header 
+        className="border-b bg-background/95 backdrop-blur-sm"
+        variants={itemVariants}
+      >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">AI Code Debugger</h1>
           <div className="flex items-center gap-4">
@@ -145,11 +176,14 @@ export default function HomePage() {
             </Button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-4">
+        <motion.div 
+          className="grid md:grid-cols-2 gap-8"
+          variants={containerVariants}
+        >
+          <motion.div className="space-y-4" variants={itemVariants}>
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Code Input</h2>
               <div className="bg-background/95 rounded-md">
@@ -223,9 +257,9 @@ export default function HomePage() {
                 Explain Code
               </Button>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="space-y-4">
+          <motion.div className="space-y-4" variants={itemVariants}>
             <h2 className="text-xl font-semibold">Results</h2>
             <div className="relative bg-background/95 rounded-lg p-4">
               <Button
@@ -241,9 +275,9 @@ export default function HomePage() {
                 language={targetLanguage}
               />
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </main>
-    </div>
+    </motion.div>
   );
 }

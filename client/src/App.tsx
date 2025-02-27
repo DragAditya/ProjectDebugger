@@ -9,8 +9,12 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute, AuthCallback } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
+import { AnimatePresence, motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 function Router() {
+  const [location] = useLocation();
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background pattern with reduced opacity */}
@@ -18,22 +22,32 @@ function Router() {
 
       {/* Content wrapper with proper z-index */}
       <div className="relative z-10">
-        <Switch>
-          <Route path="/home">
-            {/* Additional background color for home page components */}
-            <div className="min-h-screen bg-background/95">
-              <HomePage />
-            </div>
-          </Route>
-          <Route path="/auth/callback" component={AuthCallback} />
-          <Route path="/auth">
-            <AuthPage />
-          </Route>
-          <Route path="/">
-            <Hero />
-          </Route>
-          <Route component={NotFound} />
-        </Switch>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <Switch>
+              <Route path="/home">
+                {/* Additional background color for home page components */}
+                <div className="min-h-screen bg-background/95">
+                  <HomePage />
+                </div>
+              </Route>
+              <Route path="/auth/callback" component={AuthCallback} />
+              <Route path="/auth">
+                <AuthPage />
+              </Route>
+              <Route path="/">
+                <Hero />
+              </Route>
+              <Route component={NotFound} />
+            </Switch>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
