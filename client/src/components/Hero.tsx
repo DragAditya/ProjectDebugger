@@ -53,7 +53,7 @@ export function Hero() {
             className="h-12 px-8 text-base bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0"
             asChild
           >
-            <Link href="/home">Get Started</Link>
+            <Link href="/auth">Get Started</Link>
           </Button>
           <Button 
             size="lg" 
