@@ -91,11 +91,14 @@ ${code}
 
 Provide your response in this exact JSON format only, with no additional text or code blocks:
 {
-  "translatedCode": "The translated code here with all quotes properly escaped",
-  "explanation": "Your detailed explanation here with all quotes properly escaped"
+  "translatedCode": "The translated code here using only single quotes for strings",
+  "explanation": "Your detailed explanation here using only single quotes for strings"
 }
 
 Requirements:
+1. Use ONLY single quotes (') for ALL string literals in both translatedCode and explanation
+2. NEVER use double quotes (") anywhere in your response
+3. Return valid JSON only
 1. Maintain the same functionality and logic
 2. Use idiomatic patterns for the target language
 3. Include any necessary imports or setup code
@@ -112,20 +115,51 @@ Requirements:
         // Clean up the response text
         text = text.replace(/^```json\n|\n```$/g, ''); // Remove code block markers
         text = text.replace(/\\n/g, '\n'); // Handle escaped newlines
-        text = text.replace(/\\"/g, '"'); // Handle escaped quotes
-        text = text.replace(/\n/g, ' '); // Replace actual newlines with spaces
-        text = text.replace(/\s+/g, ' '); // Normalize whitespace
-        const parsedResponse = JSON.parse(text);
-        const translationResult = {
-          translatedCode: parsedResponse.translatedCode || "",
-          explanation: parsedResponse.explanation || "No explanation provided"
-        };
-
-        if (!translationResult.translatedCode || !translationResult.explanation) {
-          throw new Error("Invalid translation response");
+        
+        // Fix common JSON parsing issues with quotes
+        // Replace unescaped double quotes within string values
+        text = text.replace(/"([^"]*)":\s*"([^"]*)"/g, (match, key, value) => {
+          // Keep the key with double quotes, but escape any internal double quotes in value
+          const fixedValue = value.replace(/(?<!\\)"/g, '\\"');
+          return `"${key}": "${fixedValue}"`;
+        });
+        
+        // Safety check for same language translation
+        if (fromLanguage === toLanguage) {
+          return {
+            translatedCode: code,
+            explanation: "No translation needed as source and target languages are the same."
+          };
         }
+        
+        try {
+          const parsedResponse = JSON.parse(text);
+          const translationResult = {
+            translatedCode: parsedResponse.translatedCode || "",
+            explanation: parsedResponse.explanation || "No explanation provided"
+          };
 
-        return translationResult;
+          if (!translationResult.translatedCode || !translationResult.explanation) {
+            throw new Error("Invalid translation response");
+          }
+
+          return translationResult;
+        } catch (jsonError) {
+          console.error("JSON parsing error, attempting fallback parsing:", jsonError);
+          
+          // Fallback extraction using regex if JSON parsing fails
+          const codeMatch = text.match(/"translatedCode"\s*:\s*"([^"]*)"/);
+          const explanationMatch = text.match(/"explanation"\s*:\s*"([^"]*)"/);
+          
+          if (codeMatch && explanationMatch) {
+            return {
+              translatedCode: codeMatch[1].replace(/\\"/g, '"'),
+              explanation: explanationMatch[1].replace(/\\"/g, '"')
+            };
+          }
+          
+          throw jsonError;
+        }
       } catch (e) {
         console.error("Failed to parse Gemini response:", text, e);
         throw e;
