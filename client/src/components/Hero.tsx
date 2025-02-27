@@ -15,7 +15,7 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-sm font-medium text-primary mb-4"
+          className="text-sm font-medium text-orange-500 mb-4"
         >
           Made By Aditya
         </motion.p>
@@ -26,18 +26,18 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <span className="bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#FCA311] to-orange-300 bg-clip-text text-transparent">
             Advanced AI-Powered
           </span>
           <br />
-          <span className="text-white">Code Debugging</span>
+          <span className="text-foreground">Code Debugging</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mt-4"
+          className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mt-4"
         >
           Streamline your debugging process with powerful AI analysis and real-time insights
         </motion.p>
@@ -50,7 +50,7 @@ export function Hero() {
         >
           <Button 
             size="lg" 
-            className="h-12 px-8 text-base bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0"
+            className="h-12 px-8 text-base bg-[#FCA311] hover:bg-[#e5940f] border-0 text-[#000000]"
             asChild
           >
             <Link href="/auth">Get Started</Link>
@@ -58,7 +58,7 @@ export function Hero() {
           <Button 
             size="lg" 
             variant="outline"
-            className="h-12 px-8 text-base border-zinc-700 hover:bg-zinc-800/50 text-zinc-300"
+            className="h-12 px-8 text-base border-[#14213D] hover:bg-[#14213D]/10 text-foreground"
             asChild
           >
             <a href="https://github.com/DragAditya" target="_blank" rel="noopener noreferrer">

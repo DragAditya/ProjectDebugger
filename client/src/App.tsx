@@ -36,7 +36,9 @@ function Router() {
               </Route>
               <Route path="/auth/callback" component={AuthCallback} />
               <Route path="/auth">
-                <AuthPage />
+                <div className="min-h-screen bg-background/95 backdrop-blur-sm">
+                  <AuthPage />
+                </div>
               </Route>
               <Route path="/">
                 <Hero />
