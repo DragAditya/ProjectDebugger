@@ -17,7 +17,7 @@ export function Hero() {
           transition={{ delay: 0.2 }}
           className="text-sm font-medium text-primary mb-4"
         >
-          Available now
+          Made By Aditya
         </motion.p>
 
         <motion.h1 
