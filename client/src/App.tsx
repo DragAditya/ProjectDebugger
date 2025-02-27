@@ -31,14 +31,18 @@ function Router() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <Switch>
-              <Route path="/home" component={HomePage} />
+              <Route path="/home">
+                <HomePage />
+              </Route>
               <Route path="/auth/callback" component={AuthCallback} />
               <Route path="/auth">
                 <div className="min-h-screen bg-background/95 backdrop-blur-sm">
                   <AuthPage />
                 </div>
               </Route>
-              <Route path="/" component={Hero} />
+              <Route path="/">
+                <Hero />
+              </Route>
               <Route component={NotFound} />
             </Switch>
           </motion.div>
