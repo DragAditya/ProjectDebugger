@@ -89,10 +89,10 @@ Original code (${fromLanguage}):
 ${code}
 \`\`\`
 
-Provide your response in this exact JSON format with no additional text or markdown:
+Provide your response in this exact JSON format only, with no additional text or code blocks:
 {
-  "translatedCode": "The complete translated code",
-  "explanation": "Explanation of the key differences and changes made during translation"
+  "translatedCode": "The translated code here with all quotes properly escaped",
+  "explanation": "Your detailed explanation here with all quotes properly escaped"
 }
 
 Requirements:
