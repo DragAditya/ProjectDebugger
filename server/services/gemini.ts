@@ -105,7 +105,8 @@ Requirements:
 4. Explain any significant changes or language-specific adaptations
 5. Include best practices and potential improvements
 6. Use plain text formatting 
-7. Avoid escaping quotes in the detailedExplanation field`;
+7. Avoid escaping quotes in the detailedExplanation field
+8. Strictly Dont use ** or "" or any other formatting that might be interepreted as markdown`;
 
       const result = await model.generateContent(prompt);
       const response = result.response;
