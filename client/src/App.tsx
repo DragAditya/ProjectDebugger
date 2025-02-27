@@ -14,7 +14,7 @@ function Router() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Dot pattern background */}
-      <div className="absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
+      <div className="absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-35" />
       <Switch>
         <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/auth">
