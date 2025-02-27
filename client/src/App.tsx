@@ -32,10 +32,7 @@ function Router() {
           >
             <Switch>
               <Route path="/home">
-                {/* Additional background color for home page components */}
-                <div className="min-h-screen bg-background/95">
-                  <HomePage />
-                </div>
+                <HomePage />
               </Route>
               <Route path="/auth/callback" component={AuthCallback} />
               <Route path="/auth">

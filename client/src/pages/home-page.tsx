@@ -15,14 +15,15 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogOut, Copy } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.15,
+      delayChildren: 0.2
     }
   }
 };
@@ -33,8 +34,22 @@ const itemVariants = {
     opacity: 1, 
     y: 0,
     transition: {
-      duration: 0.5,
-      ease: "easeOut"
+      type: "spring",
+      duration: 0.8,
+      bounce: 0.4
+    }
+  }
+};
+
+const fadeInScale = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { 
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      duration: 0.6,
+      bounce: 0.3
     }
   }
 };
@@ -152,15 +167,24 @@ export default function HomePage() {
         className="border-b bg-background/95 backdrop-blur-sm"
         variants={itemVariants}
       >
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">AI Code Debugger</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-muted-foreground">
-              Welcome, {username}
-            </span>
-            <div className="bg-background/95 rounded-md p-1">
-              <ThemeToggle />
-            </div>
+        <div className="container mx-auto px-4 py-4 flex justify-end items-center gap-4">
+          <motion.span 
+            className="text-2xl font-semibold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
+            variants={fadeInScale}
+          >
+            {username}
+          </motion.span>
+          <motion.div 
+            className="bg-background/95 rounded-md p-1"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ThemeToggle />
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <Button
               variant="outline"
               size="sm"
@@ -174,7 +198,7 @@ export default function HomePage() {
                 <LogOut className="h-4 w-4" />
               )}
             </Button>
-          </div>
+          </motion.div>
         </div>
       </motion.header>
 
@@ -185,8 +209,16 @@ export default function HomePage() {
         >
           <motion.div className="space-y-4" variants={itemVariants}>
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Code Input</h2>
-              <div className="bg-background/95 rounded-md">
+              <motion.h2 
+                className="text-xl font-semibold"
+                variants={fadeInScale}
+              >
+                Code Input
+              </motion.h2>
+              <motion.div 
+                className="bg-background/95 rounded-md"
+                variants={fadeInScale}
+              >
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
@@ -198,39 +230,57 @@ export default function HomePage() {
                     <SelectItem value="cpp">C++</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </motion.div>
             </div>
-            <Textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter your code here..."
-              className="min-h-[400px] font-mono bg-background/95 backdrop-blur-sm"
-            />
+            <motion.div variants={fadeInScale}>
+              <Textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter your code here..."
+                className="min-h-[400px] font-mono bg-background/95 backdrop-blur-sm"
+              />
+            </motion.div>
             <div className="space-y-2">
-              <Button
-                className="w-full bg-primary hover:bg-primary/90"
-                onClick={handleDebugWithReset}
-                disabled={debugMutation.isPending}
+              <motion.div 
+                variants={fadeInScale}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {debugMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Debug Code
-              </Button>
-
-              <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-background/95"
-                  variant="outline"
-                  onClick={handleTranslateWithReset}
-                  disabled={translateMutation.isPending}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0"
+                  onClick={handleDebugWithReset}
+                  disabled={debugMutation.isPending}
                 >
-                  {translateMutation.isPending && (
+                  {debugMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Translate Code
+                  Debug Code
                 </Button>
-                <div className="bg-background/95 rounded-md">
+              </motion.div>
+
+              <div className="flex gap-2">
+                <motion.div 
+                  className="flex-1"
+                  variants={fadeInScale}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    className="w-full bg-background/95"
+                    variant="outline"
+                    onClick={handleTranslateWithReset}
+                    disabled={translateMutation.isPending}
+                  >
+                    {translateMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Translate Code
+                  </Button>
+                </motion.div>
+                <motion.div 
+                  className="bg-background/95 rounded-md"
+                  variants={fadeInScale}
+                >
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger className="w-40">
                       <SelectValue />
@@ -242,39 +292,63 @@ export default function HomePage() {
                       <SelectItem value="cpp">C++</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </motion.div>
               </div>
 
-              <Button
-                className="w-full bg-background/95"
-                variant="outline"
-                onClick={handleExplainWithReset}
-                disabled={explainMutation.isPending}
+              <motion.div 
+                variants={fadeInScale}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {explainMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Explain Code
-              </Button>
+                <Button
+                  className="w-full bg-background/95"
+                  variant="outline"
+                  onClick={handleExplainWithReset}
+                  disabled={explainMutation.isPending}
+                >
+                  {explainMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Explain Code
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
 
           <motion.div className="space-y-4" variants={itemVariants}>
-            <h2 className="text-xl font-semibold">Results</h2>
-            <div className="relative bg-background/95 rounded-lg p-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-2"
-                onClick={handleCopy}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-              <DebugResults
-                results={getResults()}
-                language={targetLanguage}
-              />
-            </div>
+            <motion.h2 
+              className="text-xl font-semibold"
+              variants={fadeInScale}
+            >
+              Results
+            </motion.h2>
+            <motion.div 
+              className="relative bg-background/95 rounded-lg p-4"
+              variants={fadeInScale}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={getResults()?.id || 'empty'}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2"
+                    onClick={handleCopy}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <DebugResults
+                    results={getResults()}
+                    language={targetLanguage}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
           </motion.div>
         </motion.div>
       </main>
