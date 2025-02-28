@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, lineNumbers } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { java } from "@codemirror/lang-java";
@@ -35,6 +35,7 @@ export default function CodeEditor({ value, onChange, language, readOnly = false
         basicSetup,
         languageExtensions[language](),
         EditorState.readOnly.of(readOnly),
+        readOnly ? [] : lineNumbers(), //Conditionally add line numbers
         EditorView.updateListener.of(update => {
           if (update.docChanged && !readOnly) {
             onChange(update.state.doc.toString());
