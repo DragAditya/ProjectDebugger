@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogOut, Copy } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
+import Navbar from "@/components/navbar"; // Import the Navbar component
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -164,46 +166,7 @@ export default function HomePage() {
       initial="hidden"
       animate="visible"
     >
-      <motion.header 
-        className="border-b bg-background/95 backdrop-blur-sm"
-        variants={itemVariants}
-      >
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <motion.span 
-            className="text-2xl font-semibold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
-            variants={fadeInScale}
-          >
-            {username}
-          </motion.span>
-          <div className="flex items-center gap-4">
-          <motion.div 
-            className="bg-background/95 rounded-md p-1"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ThemeToggle />
-          </motion.div>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-              className="bg-background/95"
-            >
-              {logoutMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogOut className="h-4 w-4" />
-              )}
-            </Button>
-          </motion.div>
-          </div>
-        </div>
-      </motion.header>
+      <Navbar/>
 
       <main className="container mx-auto px-4 py-8">
         <motion.div 
@@ -337,10 +300,49 @@ export default function HomePage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <DebugResults
-                    results={getResults()}
-                    language={targetLanguage}
-                  />
+                  {debugMutation.data && (
+                    <DebugResults
+                      results={debugMutation.data}
+                      language={language}
+                      onCopy={() => {
+                        navigator.clipboard.writeText(debugMutation.data.correctedCode);
+                        toast({
+                          title: "Code copied to clipboard",
+                          variant: "default",
+                        });
+                      }}
+                    />
+                  )}
+                  {translateMutation.data && (
+                    <DebugResults
+                      results={{
+                        correctedCode: translateMutation.data.translatedCode,
+                        explanation: translateMutation.data.explanation,
+                      }}
+                      language={targetLanguage}
+                      onCopy={() => {
+                        navigator.clipboard.writeText(translateMutation.data.translatedCode);
+                        toast({
+                          title: "Code copied to clipboard",
+                          variant: "default",
+                        });
+                      }}
+                    />
+                  )}
+                  {/*Explain Mutation Results (added for completeness)*/}
+                  {explainMutation.data && (
+                    <DebugResults
+                      results={explainMutation.data}
+                      language={language}
+                      onCopy={() => {
+                        navigator.clipboard.writeText(explainMutation.data.explanation);
+                        toast({
+                          title: "Code copied to clipboard",
+                          variant: "default",
+                        });
+                      }}
+                    />
+                  )}
                 </motion.div>
               </AnimatePresence>
             </motion.div>
