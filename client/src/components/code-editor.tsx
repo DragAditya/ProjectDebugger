@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { basicSetup, minimalSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
-import { EditorView, lineNumbers } from "@codemirror/view";
+import { EditorView, lineNumbers, EditorViewConfig } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { java } from "@codemirror/lang-java";
@@ -48,6 +48,7 @@ export default function CodeEditor({ value, onChange, language, readOnly = false
         languageExtensions[language](),
         EditorState.readOnly.of(readOnly),
         readOnly ? [] : lineNumbers(),
+        EditorView.lineWrapping,
         EditorView.updateListener.of(update => {
           if (update.docChanged && !readOnly) {
             onChange(update.state.doc.toString());
@@ -84,7 +85,7 @@ export default function CodeEditor({ value, onChange, language, readOnly = false
     <Card className={`relative ${adaptiveHeight ? '' : 'min-h-[400px]'} overflow-hidden`}>
       <div 
         ref={containerRef}
-        className="w-full p-4 font-mono overflow-x-auto"
+        className="w-full p-4 font-mono whitespace-pre-wrap"
         style={{ height: adaptiveHeight ? 'auto' : '400px' }}
       />
     </Card>
