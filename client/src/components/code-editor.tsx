@@ -13,6 +13,7 @@ interface CodeEditorProps {
   onChange: (value: string) => void;
   language: string;
   readOnly?: boolean;
+  adaptiveHeight?: boolean;
 }
 
 const languageExtensions: Record<string, any> = {
@@ -22,12 +23,23 @@ const languageExtensions: Record<string, any> = {
   cpp
 };
 
-export default function CodeEditor({ value, onChange, language, readOnly = false }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, language, readOnly = false, adaptiveHeight = false }: CodeEditorProps) {
   const [editor, setEditor] = useState<EditorView | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const container = document.getElementById("code-editor-container");
+    const container = containerRef.current;
     if (!container) return;
+
+    // Calculate line count to set height
+    const lineCount = value.split('\n').length;
+    if (adaptiveHeight && container) {
+      // Set a min-height of 3 lines and max based on content
+      const lineHeight = 22; // Approximate line height in pixels
+      const padding = 32; // Padding for the container
+      const height = Math.max(3 * lineHeight, Math.min(30 * lineHeight, lineCount * lineHeight)) + padding;
+      container.style.height = `${height}px`;
+    }
 
     const startState = EditorState.create({
       doc: value,
@@ -69,10 +81,11 @@ export default function CodeEditor({ value, onChange, language, readOnly = false
   }, [value, editor]);
 
   return (
-    <Card className="relative min-h-[400px] overflow-hidden">
+    <Card className={`relative ${adaptiveHeight ? '' : 'min-h-[400px]'} overflow-hidden`}>
       <div 
-        id="code-editor-container" 
-        className="absolute inset-0 w-full h-full p-4 font-mono"
+        ref={containerRef}
+        className="w-full p-4 font-mono overflow-x-auto"
+        style={{ height: adaptiveHeight ? 'auto' : '400px' }}
       />
     </Card>
   );

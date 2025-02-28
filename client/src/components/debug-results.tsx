@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, CheckCircle, Copy, Check } from "lucide-react";
 import CodeEditor from "./code-editor";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface DebugResultsProps {
   results?: {
@@ -115,12 +115,15 @@ export default function DebugResults({ results, language = "javascript" }: Debug
                 <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
               </button>
             </div>
-            <CodeEditor
-              value={results.correctedCode}
-              onChange={() => {}}
-              language={language}
-              readOnly
-            />
+            <div className="overflow-x-auto">
+              <CodeEditor
+                value={results.correctedCode}
+                onChange={() => {}}
+                language={language}
+                readOnly
+                adaptiveHeight
+              />
+            </div>
           </div>
 
           <div className="mt-4 pt-4 border-t">
