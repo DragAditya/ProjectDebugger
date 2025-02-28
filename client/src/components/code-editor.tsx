@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { basicSetup, minimalSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
