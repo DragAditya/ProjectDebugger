@@ -167,13 +167,14 @@ export default function HomePage() {
         className="border-b bg-background/95 backdrop-blur-sm"
         variants={itemVariants}
       >
-        <div className="container mx-auto px-4 py-4 flex justify-end items-center gap-4">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <motion.span 
             className="text-2xl font-semibold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
             variants={fadeInScale}
           >
             {username}
           </motion.span>
+          <div className="flex items-center gap-4">
           <motion.div 
             className="bg-background/95 rounded-md p-1"
             whileHover={{ scale: 1.05 }}
@@ -199,6 +200,7 @@ export default function HomePage() {
               )}
             </Button>
           </motion.div>
+          </div>
         </div>
       </motion.header>
 
