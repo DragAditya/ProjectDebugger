@@ -13,7 +13,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogOut, Copy, Check } from "lucide-react";
+import { Loader2, LogOut, Copy } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -60,7 +60,6 @@ export default function HomePage() {
   const [language, setLanguage] = useState("javascript");
   const [targetLanguage, setTargetLanguage] = useState("python");
   const [code, setCode] = useState("");
-  const [copiedTranslate, setCopiedTranslate] = useState(false);
 
   const debugMutation = useMutation({
     mutationFn: async (data: { code: string; language: string }) => {
@@ -156,15 +155,6 @@ export default function HomePage() {
     });
   };
 
-  const copyTranslatedCode = () => {
-    if (translateMutation.data?.translatedCode) {
-      navigator.clipboard.writeText(translateMutation.data.translatedCode);
-      setCopiedTranslate(true);
-      setTimeout(() => setCopiedTranslate(false), 1500);
-      toast({ title: 'Translated code copied!', duration: 1500 });
-    }
-  };
-
   const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'User';
 
   return (
@@ -188,7 +178,6 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
           <motion.div 
             className="bg-background/95 rounded-md p-1"
-            style={{ transform: 'scale(0.75)' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
