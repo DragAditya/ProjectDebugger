@@ -72,7 +72,7 @@ export default function CodeEditor({ value, onChange, language, readOnly = false
     <Card className="relative min-h-[400px] overflow-hidden">
       <div 
         id="code-editor-container" 
-        className="absolute inset-0 w-full h-full p-4 font-mono"
+        className="absolute inset-0 w-full h-full p-4 pt-10 font-mono"
       />
     </Card>
   );

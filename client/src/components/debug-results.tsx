@@ -13,9 +13,10 @@ interface DebugResultsProps {
     keyComponents?: string[];
   };
   language?: string;
+  onCopy?: () => void; // Added onCopy prop
 }
 
-export default function DebugResults({ results, language = "javascript" }: DebugResultsProps) {
+export default function DebugResults({ results, language = "javascript", onCopy }: DebugResultsProps) {
   if (!results) {
     return (
       <Card className="min-h-[400px]">
@@ -89,7 +90,13 @@ export default function DebugResults({ results, language = "javascript" }: Debug
       <Card>
         <CardContent className="p-4">
           <h3 className="font-medium mb-2">Corrected Code</h3>
-          <div className="mb-4">
+          <div className="relative mb-4"> {/* Added relative positioning */}
+            <button
+              onClick={onCopy}
+              className="absolute top-2 right-2 z-10 text-xs bg-background/95 hover:bg-background/80 px-2 py-1 rounded-md transition-colors border"
+            >
+              Copy Code
+            </button>
             <CodeEditor
               value={results.correctedCode}
               onChange={() => {}}
@@ -118,7 +125,7 @@ export default function DebugResults({ results, language = "javascript" }: Debug
             <div className="mt-4 pt-4 border-t">
               <h4 className="font-medium mb-2">Explanation</h4>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {typeof results.explanation === 'object' 
+                {typeof results.explanation === 'object'
                   ? JSON.stringify(results.explanation, null, 2)
                   : results.explanation || 'No explanation available'}
               </p>
