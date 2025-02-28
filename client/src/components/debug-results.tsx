@@ -16,7 +16,15 @@ interface DebugResultsProps {
   onCopy?: () => void; // Added onCopy prop
 }
 
-export default function DebugResults({ results, language = "javascript", onCopy }: DebugResultsProps) {
+export default function DebugResults({ results, language = "javascript" }: DebugResultsProps) {
+  const handleCopy = () => {
+    if (results?.correctedCode) {
+      navigator.clipboard.writeText(results.correctedCode);
+    } else if (results?.translatedCode) {
+      navigator.clipboard.writeText(results.translatedCode);
+    }
+  };
+  
   if (!results) {
     return (
       <Card className="min-h-[400px]">
@@ -90,13 +98,16 @@ export default function DebugResults({ results, language = "javascript", onCopy 
       <Card>
         <CardContent className="p-4">
           <h3 className="font-medium mb-2">Corrected Code</h3>
-          <div className="relative mb-4"> {/* Added relative positioning */}
-            <button
-              onClick={onCopy}
-              className="absolute top-2 right-2 z-10 text-xs bg-background/95 hover:bg-background/80 px-2 py-1 rounded-md transition-colors border"
-            >
-              Copy Code
-            </button>
+          <div className="mb-4">
+            <div className="rounded-t-md bg-muted/80 flex items-center justify-between p-2 border border-b-0">
+              <span className="text-xs text-muted-foreground">{language}</span>
+              <button
+                onClick={handleCopy}
+                className="text-xs flex items-center gap-1 hover:bg-muted px-2 py-1 rounded transition-colors"
+              >
+                <span className="hidden sm:inline">Copy</span>
+              </button>
+            </div>
             <CodeEditor
               value={results.correctedCode}
               onChange={() => {}}

@@ -336,14 +336,6 @@ export default function HomePage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-2"
-                    onClick={handleCopy}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
                   <DebugResults
                     results={getResults()}
                     language={targetLanguage}
