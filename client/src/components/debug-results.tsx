@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Copy, Check } from "lucide-react";
 import CodeEditor from "./code-editor";
+import { useState } from "react";
 
 interface DebugResultsProps {
   results?: {
@@ -13,18 +14,23 @@ interface DebugResultsProps {
     keyComponents?: string[];
   };
   language?: string;
-  onCopy?: () => void; // Added onCopy prop
 }
 
 export default function DebugResults({ results, language = "javascript" }: DebugResultsProps) {
+  const [copied, setCopied] = useState(false);
+
   const handleCopy = () => {
     if (results?.correctedCode) {
       navigator.clipboard.writeText(results.correctedCode);
     } else if (results?.translatedCode) {
       navigator.clipboard.writeText(results.translatedCode);
     }
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
   };
-  
+
   if (!results) {
     return (
       <Card className="min-h-[400px]">
@@ -103,9 +109,10 @@ export default function DebugResults({ results, language = "javascript" }: Debug
               <span className="text-xs text-muted-foreground">{language}</span>
               <button
                 onClick={handleCopy}
-                className="text-xs flex items-center gap-1 hover:bg-muted px-2 py-1 rounded transition-colors"
+                className={`text-xs flex items-center gap-1 hover:bg-muted px-2 py-1 rounded transition-colors ${copied ? 'bg-green-500/20 text-green-500' : ''}`}
               >
-                <span className="hidden sm:inline">Copy</span>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
               </button>
             </div>
             <CodeEditor
@@ -136,9 +143,9 @@ export default function DebugResults({ results, language = "javascript" }: Debug
             <div className="mt-4 pt-4 border-t">
               <h4 className="font-medium mb-2">Explanation</h4>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {typeof results.explanation === 'object'
+                {typeof results.explanation === "object"
                   ? JSON.stringify(results.explanation, null, 2)
-                  : results.explanation || 'No explanation available'}
+                  : results.explanation || "No explanation available"}
               </p>
             </div>
           </div>

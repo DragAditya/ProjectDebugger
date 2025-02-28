@@ -151,6 +151,7 @@ export default function HomePage() {
     navigator.clipboard.writeText(codeToCopy);
     toast({
       title: "Code copied to clipboard",
+      duration: 1500,
     });
   };
 
