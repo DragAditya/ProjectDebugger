@@ -1,133 +1,77 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, CheckCircle } from "lucide-react";
-import CodeEditor from "./code-editor";
+import { CodeEditor } from "@/components/code-editor";
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface DebugResultsProps {
-  results?: {
-    issues?: string[];
-    explanation?: string;
+  results: {
+    id?: string;
+    error?: string;
     correctedCode?: string;
+    explanation?: string;
     translatedCode?: string;
-    overview?: string;
-    detailedExplanation?: string;
-    keyComponents?: string[];
-  };
-  language?: string;
+  } | null;
+  language: string;
 }
 
-export default function DebugResults({ results, language = "javascript" }: DebugResultsProps) {
+export default function DebugResults({ results, language }: DebugResultsProps) {
+  const { toast } = useToast();
+
   if (!results) {
-    return (
-      <Card className="min-h-[400px]">
-        <CardContent className="p-4 h-full flex items-center justify-center text-muted-foreground">
-          Debug results will appear here
-        </CardContent>
-      </Card>
-    );
+    return <div className="text-muted-foreground">No results to display</div>;
   }
 
-  // Handle translation results
-  if (results.translatedCode) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium mb-2">Translated Code</h3>
-          <div className="mb-4">
-            <CodeEditor
-              value={results.translatedCode}
-              onChange={() => {}}
-              language={language}
-              readOnly
-            />
-          </div>
-          <div className="mt-4 pt-4 border-t">
-            <h4 className="font-medium mb-2">Translation Notes</h4>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {results.explanation}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  if (results.error) {
+    return <div className="text-destructive">{results.error}</div>;
   }
 
-  // Handle explanation results
-  if (results.overview) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium mb-2">Code Overview</h3>
-          <p className="text-sm text-muted-foreground mb-4">{results.overview}</p>
+  const displayCode = results.correctedCode || results.translatedCode || '';
+  const explanation = results.explanation || '';
 
-          <div className="mt-4 pt-4 border-t">
-            <h4 className="font-medium mb-2">Detailed Explanation</h4>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {results.detailedExplanation}
-            </p>
-          </div>
+  const handleCopy = () => {
+    navigator.clipboard.writeText(displayCode);
+    toast({
+      title: "Code copied to clipboard",
+    });
+  };
 
-          {results.keyComponents && results.keyComponents.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <h4 className="font-medium mb-2">Key Components</h4>
-              <ul className="space-y-1">
-                {results.keyComponents.map((component, index) => (
-                  <li key={index} className="text-sm text-muted-foreground">
-                    • {component}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Handle debug results
-  if (results.correctedCode) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium mb-2">Corrected Code</h3>
-          <div className="mb-4">
-            <CodeEditor
-              value={results.correctedCode}
-              onChange={() => {}}
-              language={language}
-              readOnly
-            />
-          </div>
-
-          <div className="mt-4 pt-4 border-t">
-            <h4 className="font-medium mb-2 flex items-center gap-2">
-              {results.issues && results.issues.length > 0 ? (
-                <AlertCircle className="h-5 w-5 text-destructive" />
-              ) : (
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              )}
-              {results.issues && results.issues.length > 0 ? "Issues Found" : "No Issues Found"}
-            </h4>
-            <ul className="space-y-2 mb-4">
-              {results.issues && results.issues.map((issue, index) => (
-                <li key={index} className="text-sm text-muted-foreground">
-                  • {issue}
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-4 pt-4 border-t">
-              <h4 className="font-medium mb-2">Explanation</h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {typeof results.explanation === 'object' 
-                  ? JSON.stringify(results.explanation, null, 2)
-                  : results.explanation || 'No explanation available'}
-              </p>
+  return (
+    <div className="space-y-4">
+      {displayCode && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Code</h3>
+          <div className="rounded-md border relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10"
+              onClick={handleCopy}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <div style={{ 
+              maxHeight: `${Math.min(displayCode.split('\n').length + 1, 20) * 24}px`, 
+              minHeight: "80px" 
+            }}>
+              <CodeEditor 
+                value={displayCode} 
+                language={language} 
+                readOnly={true}
+                onChange={() => {}}
+              />
             </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
+        </div>
+      )}
 
-  return null;
+      {explanation && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Explanation</h3>
+          <div className="rounded-md border bg-muted p-4 text-sm">
+            <pre className="whitespace-pre-wrap">{explanation}</pre>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
