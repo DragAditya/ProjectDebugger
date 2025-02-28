@@ -54,9 +54,11 @@ export default function AuthPage() {
   });
 
   // Redirect if user is already authenticated
-  if (user) {
-    return <Redirect to="/home" />;
-  }
+  useEffect(() => {
+    if (user) {
+      window.location.href = "/home";
+    }
+  }, [user]);
 
   return (
     <motion.div 
