@@ -1,8 +1,8 @@
-
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
-import { GitHub, LogOut } from "lucide-react";
+import { GitHub as Github } from "lucide-react"; // Corrected import
+import { LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
@@ -59,13 +59,33 @@ export function Navbar() {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
                 <li>
-                  <a 
-                    href="https://github.com/yourusername/your-repo" 
+                  <a
+                    href="https://github.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
                   >
-                    <GitHub size={16} /> GitHub Repository
+                    <Github size={16} /> GitHub Home
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/trending" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Github size={16} /> GitHub Trending
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/explore" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Github size={16} /> GitHub Explore
                   </a>
                 </li>
               </motion.ul>
