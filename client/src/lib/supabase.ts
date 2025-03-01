@@ -15,7 +15,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: window.localStorage,
     storageKey: 'supabase.auth.token',
     flowType: 'pkce',
-    debug: true
   }
 })
 
@@ -26,7 +25,7 @@ supabase.auth.getSession().then(({ data: { session } }) => {
   console.error('Failed to get initial session:', error.message)
 })
 
-// Listen for auth state changes (keeps original functionality)
+// Listen for auth state changes
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Supabase auth event:', event)
   console.log('Session exists:', !!session)
