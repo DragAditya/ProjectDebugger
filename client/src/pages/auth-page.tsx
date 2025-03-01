@@ -243,7 +243,7 @@ export default function AuthPage() {
             quality.
           </p>
         </div>
-      </motion.div>on.div>
+      </motion.div>
     </motion.div>
   );
 }
