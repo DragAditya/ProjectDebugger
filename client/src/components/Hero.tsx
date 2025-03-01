@@ -1,8 +1,19 @@
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Link } from "wouter"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
 
 export function Hero() {
+  const [, setLocation] = useLocation(); // useLocation gives the current location and a setter
+  const isLoggedIn = localStorage.getItem("isLoggedIn"); // Check login status
+
+  // Redirect to auth page if not logged in
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setLocation("/auth"); // Set location programmatically to redirect to /auth
+    }
+  }, [isLoggedIn, setLocation]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-4 relative z-10">
       <motion.div
@@ -20,7 +31,7 @@ export function Hero() {
           Made By Aditya
         </motion.p>
 
-        <motion.h1 
+        <motion.h1
           className="text-5xl sm:text-7xl font-bold"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -42,31 +53,36 @@ export function Hero() {
           Streamline your debugging process with powerful AI analysis and real-time insights
         </motion.p>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="flex flex-wrap gap-4 justify-center pt-8"
         >
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="h-12 px-8 text-base bg-[#FCA311] hover:bg-[#e5940f] border-0 text-[#000000]"
             asChild
           >
-            <Link href="/home">Get Started</Link>
+            {/* Direct to Home page if logged in, otherwise to Auth page */}
+            <Link href={isLoggedIn ? "/home" : "/auth"}>Get Started</Link>
           </Button>
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             variant="outline"
             className="h-12 px-8 text-base border-[#14213D] hover:bg-[#14213D]/10 text-foreground"
             asChild
           >
-            <a href="https://github.com/DragAditya" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://github.com/DragAditya"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Documentation
             </a>
           </Button>
         </motion.div>
       </motion.div>
     </div>
-  )
+  );
 }

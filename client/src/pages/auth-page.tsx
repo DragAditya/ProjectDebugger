@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Redirect } from "wouter";
+import { useLocation } from "wouter"; // Using useLocation for redirection
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -35,6 +35,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const [, setLocation] = useLocation(); // Access to location setter for redirection
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -53,9 +54,10 @@ export default function AuthPage() {
     },
   });
 
-  // Redirect if user is already authenticated
+  // If user is already authenticated, redirect to /home
   if (user) {
-    return <Redirect to="/home" />;
+    setLocation("/home"); // Redirect to home page
+    return null; // Prevent rendering the rest of the page
   }
 
   return (
