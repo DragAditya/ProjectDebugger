@@ -48,33 +48,27 @@ export function ProtectedRoute({
 }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [authChecked, setAuthChecked] = useState(false);
 
-  useEffect(() => {
-    // Wait for auth state to be loaded
-    if (!isLoading) {
-      setAuthChecked(true);
-    }
-  }, [isLoading]);
-
-  if (isLoading || !authChecked) {
+  // Show loading state while checking auth
+  if (isLoading) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-border" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </Route>
     );
   }
 
+  // If no user, redirect to auth page
   if (!user) {
-    // Use programmatic navigation for smoother transition
-    useEffect(() => {
-      setLocation("/auth");
-    }, [setLocation]);
-
-    return null;
+    return (
+      <Route path={path}>
+        <Redirect to="/auth" />
+      </Route>
+    );
   }
 
+  // If user is authenticated, render the protected component
   return <Route path={path} component={Component} />;
 }
