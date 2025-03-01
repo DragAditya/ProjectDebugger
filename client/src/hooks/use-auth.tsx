@@ -44,8 +44,7 @@ const useLoginMutation = () => {
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      // Use window.location for a full page reload to ensure clean state
-      window.location.href = "/home";
+      setLocation("/home");
     },
     onError: (error: Error) => {
       toast({
@@ -115,12 +114,30 @@ const useRegisterMutation = () => {
 
 const useLogoutMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   return useMutation({
     mutationFn: async () => {
       try {
+        // Clear Supabase auth state first
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
+
+        // Then clear server session
+        const response = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Server logout failed');
+        }
+
+        // Force reload to clear any cached state
+        window.location.reload();
       } catch (error) {
         if (error instanceof AuthError) {
           throw new Error(error.message);
@@ -166,16 +183,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    // Reduce staleTime to ensure more frequent checks
-    staleTime: 1000 * 60, // Consider data fresh for 1 minute
-    gcTime: 1000 * 60 * 5, // Keep data in cache for 5 minutes
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 30, // Keep data in cache for 30 minutes
   });
 
   // Listen for auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[Auth Event]', { event, sessionExists: !!session });
-      await refetch(); // Wait for refetch to complete
+      refetch();
     });
 
     return () => {

@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route, useLocation } from "wouter";
+import { Redirect, Route } from "wouter";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -47,20 +47,17 @@ export function ProtectedRoute({
   component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
 
-  // Show loading state while checking auth
   if (isLoading) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
       </Route>
     );
   }
 
-  // If no user, redirect to auth page
   if (!user) {
     return (
       <Route path={path}>
@@ -69,6 +66,5 @@ export function ProtectedRoute({
     );
   }
 
-  // If user is authenticated, render the protected component
   return <Route path={path} component={Component} />;
 }

@@ -31,23 +31,18 @@ function Router() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <Switch>
-              {/* Protected Home route */}
-              <ProtectedRoute path="/home" component={HomePage} />
-
-              {/* Auth related routes */}
+              <Route path="/home">
+                <HomePage />
+              </Route>
               <Route path="/auth/callback" component={AuthCallback} />
               <Route path="/auth">
                 <div className="min-h-screen bg-background/95 backdrop-blur-sm">
                   <AuthPage />
                 </div>
               </Route>
-
-              {/* Landing page */}
               <Route path="/">
                 <Hero />
               </Route>
-
-              {/* 404 page */}
               <Route component={NotFound} />
             </Switch>
           </motion.div>
