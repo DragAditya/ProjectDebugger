@@ -82,7 +82,7 @@ export default function CodeEditor({ value, onChange, language, readOnly = false
   }, [value, editor]);
 
   return (
-    <Card className={`relative ${adaptiveHeight ? '' : 'min-h-[400px]'} overflow-hidden`}>
+    <Card className={`relative ${adaptiveHeight ? '' : 'min-h-[400px]'} overflow-hidden rounded-t-lg`}>
       <div 
         ref={containerRef}
         className="w-full p-4 font-mono whitespace-pre-wrap"

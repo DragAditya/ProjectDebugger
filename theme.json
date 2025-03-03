@@ -2,7 +2,7 @@
   "variant": "professional",
   "primary": "#FCA311",
   "appearance": "system",
-  "radius": 0.5,
+  "radius": 1.3,
   "colors": {
     "light": {
       "background": "#E5E5E5",
