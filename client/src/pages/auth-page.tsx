@@ -18,8 +18,10 @@ import { Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { queryClient } from "@/lib/queryClient";
+import { EyeIcon } from "@/components/icons"; // Import EyeIcon
+
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -35,19 +37,35 @@ const registerSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
+function PasswordInput({ ...props }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        type={showPassword ? "text" : "password"}
+        {...props}
+      />
+      <button
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute top-1/2 right-2 -translate-y-1/2"
+      >
+        <EyeIcon className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [location] = useLocation();
 
   useEffect(() => {
-    // Check if we should refresh based on URL parameter
     const params = new URLSearchParams(window.location.search);
     if (params.get('refresh') === 'true') {
-      // Set a timeout to refresh after 2 seconds
       const timer = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["auth-user"] });
       }, 2000);
-
       return () => clearTimeout(timer);
     }
   }, [location]);
@@ -69,13 +87,12 @@ export default function AuthPage() {
     },
   });
 
-  // Redirect if user is already authenticated
   if (user) {
     return <Redirect to="/home" />;
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -109,12 +126,12 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="email" 
+                            <Input
+                              type="email"
                               placeholder="your@email.com"
                               autoComplete="email"
                               disabled={loginMutation.isPending}
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -128,12 +145,11 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password"
+                            <PasswordInput
                               placeholder="••••••••"
                               autoComplete="current-password"
                               disabled={loginMutation.isPending}
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -173,12 +189,12 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Username</FormLabel>
                           <FormControl>
-                            <Input 
+                            <Input
                               type="text"
                               placeholder="johndoe"
                               autoComplete="username"
                               disabled={registerMutation.isPending}
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -192,12 +208,12 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input 
+                            <Input
                               type="email"
                               placeholder="your@email.com"
                               autoComplete="email"
                               disabled={registerMutation.isPending}
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -211,12 +227,11 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password"
+                            <PasswordInput
                               placeholder="••••••••"
                               autoComplete="new-password"
                               disabled={registerMutation.isPending}
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -245,7 +260,7 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
