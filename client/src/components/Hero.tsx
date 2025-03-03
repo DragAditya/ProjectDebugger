@@ -53,7 +53,7 @@ export function Hero() {
             className="h-12 px-8 text-base bg-[#FCA311] hover:bg-[#e5940f] border-0 text-[#000000]"
             asChild
           >
-            <Link href="/auth?refresh=true">Get Started</Link>
+            <Link href="/auth">Get Started</Link>
           </Button>
           <Button 
             size="lg" 
