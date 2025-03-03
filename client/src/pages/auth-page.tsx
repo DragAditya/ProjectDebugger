@@ -18,6 +18,8 @@ import { Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 import { z } from "zod";
+import { useEffect } from "react";
+import { queryClient } from "@/lib/queryClient";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -35,6 +37,11 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+
+  useEffect(() => {
+    // Refresh auth state when page loads
+    queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+  }, []);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
