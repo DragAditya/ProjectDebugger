@@ -64,13 +64,13 @@ export default function AuthPage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen grid md:grid-cols-2"
+      className="min-h-screen grid md:grid-cols-2 relative z-20"
     >
-      <div className="flex items-center justify-center p-8 relative">
+      <div className="flex items-center justify-center p-8 relative bg-background/80">
         <div className="absolute top-4 right-4">
           <ThemeToggle />
         </div>
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md relative z-30">
           <CardContent className="pt-6">
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid grid-cols-2 w-full mb-6">
@@ -233,7 +233,7 @@ export default function AuthPage() {
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="hidden md:flex bg-primary/5 p-12 items-center justify-center"
+        className="hidden md:flex bg-primary/5 p-12 items-center justify-center relative z-10"
       >
         <div className="max-w-lg">
           <h1 className="text-4xl font-bold mb-4">AI Code Debugger</h1>

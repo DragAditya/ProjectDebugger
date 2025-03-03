@@ -17,11 +17,11 @@ function Router() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background pattern with reduced opacity */}
-      <div className="fixed inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-25 pointer-events-none" />
+      {/* Background pattern with reduced opacity and proper z-index */}
+      <div className="fixed inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-25 pointer-events-none z-0" />
 
-      {/* Content wrapper with proper z-index */}
-      <div className="relative z-10">
+      {/* Content wrapper with higher z-index */}
+      <div className="relative z-10 min-h-screen">
         <AnimatePresence mode="wait">
           <motion.div
             key={location}
@@ -29,6 +29,7 @@ function Router() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="min-h-screen"
           >
             <Switch>
               <Route path="/home">
@@ -36,9 +37,7 @@ function Router() {
               </Route>
               <Route path="/auth/callback" component={AuthCallback} />
               <Route path="/auth">
-                <div className="min-h-screen bg-background/95 backdrop-blur-sm">
-                  <AuthPage />
-                </div>
+                <AuthPage />
               </Route>
               <Route path="/">
                 <Hero />
