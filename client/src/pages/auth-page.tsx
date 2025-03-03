@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Redirect } from "wouter";
+import { Redirect, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -37,11 +37,20 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const [location] = useLocation();
 
   useEffect(() => {
-    // Refresh auth state when page loads
-    queryClient.invalidateQueries({ queryKey: ["auth-user"] });
-  }, []);
+    // Check if we should refresh based on URL parameter
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('refresh') === 'true') {
+      // Set a timeout to refresh after 2 seconds
+      const timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
