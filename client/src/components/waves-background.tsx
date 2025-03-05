@@ -108,7 +108,7 @@ class Noise {
 }
 
 export function Waves({
-  lineColor = "hsl(var(--foreground))",
+  lineColor = "hsl(var(--foreground) / 0.3)",
   backgroundColor = "transparent",
   waveSpeedX = 0.0125,
   waveSpeedY = 0.005,
@@ -338,7 +338,7 @@ export function Waves({
       <div
         className={cn(
           "absolute top-0 left-0 rounded-full",
-          "w-2 h-2 bg-foreground/20",
+          "w-2 h-2 bg-foreground/50",
         )}
         style={{
           transform:
