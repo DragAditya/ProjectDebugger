@@ -60,7 +60,10 @@ export function Hero() {
           className="flex flex-wrap gap-4 justify-center pt-8"
         >
           <Link href="/auth">
-            <InteractiveHoverButton text="Get Started" className="border-[#FCA311] text-[#000000] hover:text-[#000000] bg-[#FCA311] hover:bg-[#e5940f]" />
+            <InteractiveHoverButton 
+              text="Get Started" 
+              className="border-[#FCA311] text-[#000000] bg-[#FCA311] group-hover:bg-[#e5940f] group-hover:text-[#000000]" 
+            />
           </Link>
           <a href="https://github.com/DragAditya" target="_blank" rel="noopener noreferrer">
             <InteractiveHoverButton text="Documentation" className="border-[#14213D] text-foreground" />
