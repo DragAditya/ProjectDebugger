@@ -12,7 +12,7 @@ export function Hero() {
         waveSpeedY={0.01}
         xGap={12}
         yGap={24}
-        className="z-0"
+        className="z-[-1]"
       />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
