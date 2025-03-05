@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useEffect, useState } from "react";
- 
+
 export interface TypewriterProps {
   text: string | string[];
   speed?: number;
@@ -12,7 +12,7 @@ export interface TypewriterProps {
   delay?: number;
   className?: string;
 }
- 
+
 export function Typewriter({
   text,
   speed = 100,
@@ -26,14 +26,14 @@ export function Typewriter({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [textArrayIndex, setTextArrayIndex] = useState(0);
- 
+
   // Validate and process input text
   const textArray = Array.isArray(text) ? text : [text];
   const currentText = textArray[textArrayIndex] || "";
- 
+
   useEffect(() => {
     if (!currentText) return;
- 
+
     const timeout = setTimeout(
       () => {
         if (!isDeleting) {
@@ -55,7 +55,7 @@ export function Typewriter({
       },
       isDeleting ? deleteSpeed : speed,
     );
- 
+
     return () => clearTimeout(timeout);
   }, [
     currentIndex,
@@ -66,10 +66,10 @@ export function Typewriter({
     deleteSpeed,
     delay,
     displayText,
-    text,
-    textArray
+    textArray,
+    textArrayIndex
   ]);
- 
+
   return (
     <span className={className}>
       {displayText}

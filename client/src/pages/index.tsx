@@ -1,5 +1,5 @@
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
-import { Typewriter } from "@/components/ui/typewriter";
+import { Typewriter } from "@/components/ui/typewriter-text";
 
 export default function HomePage() {
   return (
