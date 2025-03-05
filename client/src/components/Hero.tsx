@@ -62,7 +62,7 @@ export function Hero() {
           <Link href="/auth">
             <InteractiveHoverButton 
               text="GO" 
-              className="border-[#FCA311] text-[#000000] bg-[#FCA311] group-hover:bg-[#e5940f] group-hover:text-[#000000]" 
+              className="border-[#14213D] text-foreground" 
             />
           </Link>
           <a href="https://github.com/DragAditya" target="_blank" rel="noopener noreferrer">
