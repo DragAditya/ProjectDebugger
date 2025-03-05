@@ -59,13 +59,9 @@ export function Hero() {
           transition={{ delay: 0.5 }}
           className="flex flex-wrap gap-4 justify-center pt-8"
         >
-          <Button 
-            size="lg" 
-            className="h-12 px-8 text-base bg-[#FCA311] hover:bg-[#e5940f] border-0 text-[#000000]"
-            asChild
-          >
-            <Link href="/auth">Get Started</Link>
-          </Button>
+          <Link href="/auth">
+            <InteractiveHoverButton text="Get Started" className="border-[#FCA311] text-[#000000] hover:text-[#000000] bg-[#FCA311] hover:bg-[#e5940f]" />
+          </Link>
           <a href="https://github.com/DragAditya" target="_blank" rel="noopener noreferrer">
             <InteractiveHoverButton text="Documentation" className="border-[#14213D] text-foreground" />
           </a>
