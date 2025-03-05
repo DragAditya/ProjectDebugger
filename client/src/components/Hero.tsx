@@ -7,7 +7,7 @@ export function Hero() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-4 relative z-10">
       <Waves 
-        lineColor="hsl(var(--foreground) / 0.7)"
+        lineColor="hsl(var(--foreground) / 0.4)"
         backgroundColor="hsl(var(--background) / 0.5)"
         waveSpeedX={0.015}
         waveSpeedY={0.01}

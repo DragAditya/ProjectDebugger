@@ -338,7 +338,7 @@ export function Waves({
       <div
         className={cn(
           "absolute top-0 left-0 rounded-full",
-          "w-2 h-2 bg-foreground/50",
+          "w-2 h-2 dark:bg-white/70 bg-black/30",
         )}
         style={{
           transform:
