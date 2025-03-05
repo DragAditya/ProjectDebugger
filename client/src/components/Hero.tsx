@@ -61,12 +61,12 @@ export function Hero() {
         >
           <Link href="/auth">
             <InteractiveHoverButton 
-              text="Get Started" 
+              text="GO" 
               className="border-[#FCA311] text-[#000000] bg-[#FCA311] group-hover:bg-[#e5940f] group-hover:text-[#000000]" 
             />
           </Link>
           <a href="https://github.com/DragAditya" target="_blank" rel="noopener noreferrer">
-            <InteractiveHoverButton text="Documentation" className="border-[#14213D] text-foreground" />
+            <InteractiveHoverButton text="Docs" className="border-[#14213D] text-foreground" />
           </a>
         </motion.div>
       </motion.div>
