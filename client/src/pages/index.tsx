@@ -8,9 +8,9 @@ export default function HomePage() {
         <h1 className="mb-8 text-center text-4xl font-bold tracking-tight">
           <Typewriter
             text={[
-              "Welcome to Code Analysis Platform",
+              "Advanced AI-Powered Code Intelligence",
               "Debug Smarter, Code Better",
-              "AI-Powered Code Intelligence"
+              "Transform Your Development Workflow"
             ]}
             speed={100}
             loop={true}
