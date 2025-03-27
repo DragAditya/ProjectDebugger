@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
-import { analyzeCode, translateCode, explainCode } from "./services/gemini";
+import { analyzeCode, translateCode, explainCode, chatWithGemini, ChatMessage } from "./services/gemini";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -96,6 +96,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Explanation error:", error);
       res.status(500).json({ message: error.message || "Failed to explain code" });
+    }
+  });
+
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { messages, systemPrompt } = req.body;
+      
+      // Validate input
+      if (!Array.isArray(messages) || !messages.length) {
+        return res.status(400).json({ message: "Messages array is required" });
+      }
+      
+      // Make sure all messages have the expected format
+      const validMessages = messages.every((msg: any) => 
+        msg && (msg.role === 'user' || msg.role === 'assistant') && typeof msg.content === 'string'
+      );
+      
+      if (!validMessages) {
+        return res.status(400).json({ 
+          message: "Invalid message format. Each message must have 'role' (user/assistant) and 'content' properties"
+        });
+      }
+      
+      const response = await chatWithGemini(messages as ChatMessage[], systemPrompt);
+      res.json(response);
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      res.status(500).json({ message: error.message || "Failed to process chat" });
     }
   });
 

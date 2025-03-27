@@ -7,6 +7,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { Hero } from "./components/Hero";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import ChatPage from "@/pages/chat-page";
 import { ProtectedRoute, AuthCallback } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { AnimatePresence, motion } from "framer-motion";
@@ -33,6 +34,9 @@ function Router() {
             <Switch>
               <Route path="/home">
                 <HomePage />
+              </Route>
+              <Route path="/chat">
+                <ChatPage />
               </Route>
               <Route path="/auth/callback" component={AuthCallback} />
               <Route path="/auth">

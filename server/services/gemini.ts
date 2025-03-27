@@ -1,8 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!, {
-  apiVersion: "v1"
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+// A basic interface for chat messages
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
 async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
   let lastError: any;
@@ -208,7 +212,7 @@ Requirements:
         const explanation = {
           overview: typeof parsedResponse.overview === 'string' ? parsedResponse.overview : JSON.stringify(parsedResponse.overview),
           detailedExplanation: typeof parsedResponse.detailedExplanation === 'string' ? parsedResponse.detailedExplanation : JSON.stringify(parsedResponse.detailedExplanation),
-          keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map(c => typeof c === 'string' ? c : JSON.stringify(c)) : []
+          keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map((c: any) => typeof c === 'string' ? c : JSON.stringify(c)) : []
         };
 
         if (!explanation.overview || !explanation.detailedExplanation) {
@@ -222,6 +226,48 @@ Requirements:
       }
     } catch (error: any) {
       console.error("Gemini API error:", error);
+      throw error;
+    }
+  });
+}
+
+/**
+ * Processes a chat conversation with Gemini AI
+ * @param messages Array of chat messages with roles (user/assistant) and content
+ * @param systemPrompt Optional system prompt to guide the AI's behavior
+ */
+export async function chatWithGemini(messages: ChatMessage[], systemPrompt?: string) {
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-pro" });
+      
+      // Convert our messages format to Gemini's chat format
+      const chatHistory = messages.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.content }]
+      }));
+      
+      // Start a chat session
+      const chat = model.startChat({
+        history: chatHistory.slice(0, -1), // All messages except the last one
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+        },
+        systemInstruction: systemPrompt || 
+          "You are CodeGenius, an AI programming assistant. You're helpful, friendly, and knowledgeable about coding, software development, and technology. Provide accurate, concise answers with code examples when relevant. Be supportive and encouraging, and avoid giving incorrect or misleading information."
+      });
+      
+      // Send the most recent message and get response
+      const lastMessage = messages[messages.length - 1];
+      const result = await chat.sendMessage(lastMessage.content);
+      const response = result.response;
+      const responseText = response.text();
+      
+      return { role: "assistant" as const, content: responseText };
+    } catch (error: any) {
+      console.error("Gemini chat API error:", error);
       throw error;
     }
   });
