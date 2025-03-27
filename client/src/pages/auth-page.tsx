@@ -59,13 +59,7 @@ export default function AuthPage() {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen grid md:grid-cols-2"
-    >
+    <div className="min-h-screen grid md:grid-cols-2">
       <div className="flex items-center justify-center p-8 relative">
         <div className="absolute top-4 right-4">
           <ThemeToggle />
@@ -229,12 +223,7 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="hidden md:flex bg-primary/5 p-12 items-center justify-center"
-      >
+      <div className="hidden md:flex bg-primary/5 p-12 items-center justify-center">
         <div className="max-w-lg">
           <h1 className="text-4xl font-bold mb-4">AI Code Debugger</h1>
           <p className="text-lg text-muted-foreground">
@@ -243,7 +232,7 @@ export default function AuthPage() {
             quality.
           </p>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
