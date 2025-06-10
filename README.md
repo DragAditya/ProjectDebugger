@@ -21,11 +21,12 @@ ALTER/
 ├── client/ # Frontend code
 ├── server/ # Backend API
 ├── shared/ # Shared utilities
-├── attached_assets/ # Staticassets
+├── attached_assets/ # Static assets
 ├── package.json     # Dependencies
-├── tailwind.config.ts # Tailwind configuration
+├── tailwind.config.ts # Tailwind
 ├── tsconfig.json    # TypeScript configuration
-├── vite.config.ts   # Vite setup
+
+├── vite.config.ts  # Vite setup
 ---
 
 ## 🚀 Getting Started
