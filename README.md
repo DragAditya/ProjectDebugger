@@ -76,7 +76,17 @@ Contributions are welcome! To contribute:
 This project is licensed under the MIT License.
 
 ---
-
+---
+ALTER
+╭─ client/           ⟶ Frontend code
+├─ server/           ⟶ Backend API
+├─ shared/           ⟶ Shared utilities
+├─ attached_assets/  ⟶ Static assets
+├─ package.json      ⟶ Dependencies
+├─ tailwind.config.ts⟶ Tailwind config
+├─ tsconfig.json     ⟶ TypeScript config
+╰─ vite.config.ts    ⟶ Vite setup
+---
 ## 📧 Contact
 🔗 GitHub: [@DragAditya](https://github.com/DragAditya)
 📩 Email: waghaditya312@gmail.com
