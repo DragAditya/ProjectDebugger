@@ -18,10 +18,10 @@ ALTER is an AI-powered code debugger that helps users analyze and correct coding
 
 ## 📂 Project Structure
 ALTER/
-├── client/          # Frontend code
-├── server/          # Backend API
-├── shared/          # Shared utilities
-├── attached_assets/ # Static assets
+├── client/ # Frontend code
+├── server/ # Backend API
+├── shared/ # Shared utilities
+├── attached_assets/ # Staticassets
 ├── package.json     # Dependencies
 ├── tailwind.config.ts # Tailwind configuration
 ├── tsconfig.json    # TypeScript configuration
