@@ -36,31 +36,38 @@ ALTER
 
 ╰── vite.config.ts      → Vite build setup
 
-
+---
 
 ## 🚀 Getting Started
-### ✅ Prerequisites
+#### ✅ Prerequisites
 Ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (Latest LTS version)
 - [Git](https://git-scm.com/)
 - [Supabase](https://supabase.com/) account for database setup
 - [Clerk](https://clerk.dev/) account for authentication
 
-### 🔧 Installation
+#### 1. 🔧 Installation
 # Clone the repository
+```
  git clone https://github.com/DragAditya/ALTER.git
  cd ALTER
+ ```
 
-# Install dependencies
- npm install
-### ⚙️ Environment Variables
+#### 2. Install dependencies
+ `npm install`
+ 
+#### 3. ⚙️ Environment Variables
 Create a .env file in the root directory and add:
+```
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
 CLERK_API_KEY=your_clerk_api_key
 GEMINI_API_KEY=your_gemini_api_key
-### ▶️ Run the Development Server
-npm run dev
+```
+
+#### 4. ▶️ Run the Development Server
+`npm run dev`
+
 Access the app at: http://localhost:3000
 
 ---
@@ -92,4 +99,4 @@ This project is licensed under the MIT License.
 
 ---
 > Star ⭐ this repo if you found it useful!
-> Detailed Tutorial : .[Access Tutorial](https://code2tutorial.com/tutorial/adc1113b-50d1-4467-99cf-a3699a5dea07/index.md)
+>> Detailed Tutorial : .[Access Tutorial](https://code2tutorial.com/tutorial/adc1113b-50d1-4467-99cf-a3699a5dea07/index.md)
