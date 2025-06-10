@@ -19,14 +19,24 @@ ALTER is an AI-powered code debugger that helps users analyze and correct coding
 ## 📂 Project Structure
 
 ALTER
+
 ╭── client/             → Frontend code
+
 ├── server/             → Backend API
+
 ├── shared/             → Shared utilities
+
 ├── attached_assets/    → Static assets
+
 ├── package.json        → Dependencies
+
 ├── tailwind.config.ts  → Tailwind CSS config
+
 ├── tsconfig.json       → TypeScript config
+
 ╰── vite.config.ts      → Vite build setup
+
+
 
 ## 🚀 Getting Started
 ### ✅ Prerequisites
