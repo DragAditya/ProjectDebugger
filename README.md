@@ -5,6 +5,9 @@
 ## 🔥 Overview
 ALTER is an AI-powered code debugger that helps users analyze and correct coding errors using the Gemini API. It includes authentication via Clerk and OAuth, and features a modern UI with dark mode support.
 
+### Live Preview : [Here](https://projectdebugger.onrender.com/)
+( If You Cant Login Use /home At Postfix because my Supabase is Dead 🥀 )
+
 ## ✨ Features
 - ✅ AI Code Debugger: Fix errors with AI-powered suggestions.
 - 🔑 Authentication: Secure login/signup with Clerk & OAuth.
