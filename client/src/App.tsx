@@ -8,6 +8,7 @@ import { Hero } from "./components/Hero";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import ChatPage from "@/pages/chat-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 import { AuthCallback } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { AnimatePresence, motion } from "framer-motion";
@@ -39,6 +40,7 @@ function Router() {
                 <ChatPage />
               </Route>
               <Route path="/auth/callback" component={AuthCallback} />
+              <Route path="/auth/reset-password" component={ResetPasswordPage} />
               <Route path="/auth">
                 <div className="min-h-screen bg-background/95 backdrop-blur-sm">
                   <AuthPage />

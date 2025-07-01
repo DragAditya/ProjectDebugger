@@ -13,11 +13,21 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogOut, Copy, Code, Zap, MessageSquare, User, Settings } from "lucide-react";
+import { Loader2, LogOut, Copy, Code, Zap, MessageSquare, User, Settings, ArrowRight, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
+
+const languages = [
+  { value: "javascript", label: "JavaScript", icon: "🟨" },
+  { value: "python", label: "Python", icon: "🐍" },
+  { value: "java", label: "Java", icon: "☕" },
+  { value: "cpp", label: "C++", icon: "⚡" },
+  { value: "typescript", label: "TypeScript", icon: "🔷" },
+  { value: "go", label: "Go", icon: "🐹" },
+  { value: "rust", label: "Rust", icon: "🦀" },
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -236,62 +246,100 @@ export default function HomePage() {
   const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Developer';
   const isLoading = debugMutation.isPending || translateMutation.isPending || explainMutation.isPending;
 
+  const selectedLanguage = languages.find(l => l.value === language);
+  const selectedTargetLanguage = languages.find(l => l.value === targetLanguage);
+
   return (
-    <motion.div 
-      className="min-h-screen bg-background"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <motion.header 
-        className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50"
-        variants={itemVariants}
-      >
-        <div className="container-fluid py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <motion.h1 
-              className="text-2xl font-bold gradient-text"
-              variants={fadeInScale}
-            >
-              ALTER
-            </motion.h1>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              <span>Welcome back, {username}</span>
+      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50 safe-top">
+        <div className="container-mobile py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <motion.h1 
+                className="text-heading gradient-text font-bold"
+                whileHover={{ scale: 1.05 }}
+                onClick={() => setLocation("/")}
+                style={{ cursor: "pointer" }}
+              >
+                ALTER
+              </motion.h1>
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>Welcome, {username}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocation("/chat")}
+                className="btn btn-ghost btn-sm touch-target"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Chat</span>
+              </Button>
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="btn btn-outline btn-sm touch-target"
+              >
+                {logoutMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <LogOut className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </>
+                )}
+              </Button>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <ThemeToggle />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-              className="glass border-border/50 hover:border-destructive/50 hover:text-destructive"
-            >
-              {logoutMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </>
-              )}
-            </Button>
+
+          {/* Mobile user info */}
+          <div className="sm:hidden mt-3 flex items-center space-x-2 text-sm text-muted-foreground">
+            <User className="h-4 w-4" />
+            <span>Welcome back, {username}</span>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      <main className="container-fluid py-8">
+      <main className="container-mobile py-6 space-mobile">
+        {/* Hero Section */}
         <motion.div 
-          className="grid lg:grid-cols-2 gap-8"
-          variants={containerVariants}
+          className="text-center space-y-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
         >
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+            <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-3 py-1 rounded-full border border-border/30">
+              AI-Powered Analysis
+            </span>
+          </div>
+          <h1 className="text-display font-bold">
+            Debug, Translate & Understand Code
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Transform your development workflow with AI-powered code analysis that finds bugs, translates between languages, and explains complex logic.
+          </p>
+        </motion.div>
+
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Input Section */}
-          <motion.div className="space-y-6" variants={itemVariants}>
-            <Card className="modern-card">
+          <motion.div 
+            className="space-y-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <Card className="card-mobile">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Code className="h-5 w-5 text-primary" />
@@ -300,73 +348,79 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Language Selection */}
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                      Source Language
-                    </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Source Language</label>
                     <Select value={language} onValueChange={setLanguage}>
-                      <SelectTrigger className="modern-input">
-                        <SelectValue />
+                      <SelectTrigger className="input-mobile">
+                        <SelectValue>
+                          <div className="flex items-center space-x-2">
+                            <span>{selectedLanguage?.icon}</span>
+                            <span>{selectedLanguage?.label}</span>
+                          </div>
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="javascript">JavaScript</SelectItem>
-                        <SelectItem value="python">Python</SelectItem>
-                        <SelectItem value="java">Java</SelectItem>
-                        <SelectItem value="cpp">C++</SelectItem>
-                        <SelectItem value="typescript">TypeScript</SelectItem>
-                        <SelectItem value="go">Go</SelectItem>
-                        <SelectItem value="rust">Rust</SelectItem>
+                        {languages.map((lang) => (
+                          <SelectItem key={lang.value} value={lang.value}>
+                            <div className="flex items-center space-x-2">
+                              <span>{lang.icon}</span>
+                              <span>{lang.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  <div className="flex-1">
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                      Target Language (for translation)
-                    </label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Target Language (for translation)</label>
                     <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                      <SelectTrigger className="modern-input">
-                        <SelectValue />
+                      <SelectTrigger className="input-mobile">
+                        <SelectValue>
+                          <div className="flex items-center space-x-2">
+                            <span>{selectedTargetLanguage?.icon}</span>
+                            <span>{selectedTargetLanguage?.label}</span>
+                          </div>
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="javascript">JavaScript</SelectItem>
-                        <SelectItem value="python">Python</SelectItem>
-                        <SelectItem value="java">Java</SelectItem>
-                        <SelectItem value="cpp">C++</SelectItem>
-                        <SelectItem value="typescript">TypeScript</SelectItem>
-                        <SelectItem value="go">Go</SelectItem>
-                        <SelectItem value="rust">Rust</SelectItem>
+                        {languages.map((lang) => (
+                          <SelectItem key={lang.value} value={lang.value}>
+                            <div className="flex items-center space-x-2">
+                              <span>{lang.icon}</span>
+                              <span>{lang.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 {/* Code Input */}
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    Your Code
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Your Code</label>
                   <Textarea
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    placeholder={`Enter your ${language} code here...
+                    placeholder={`Enter your ${selectedLanguage?.label || language} code here...
 
 Example:
 function fibonacci(n) {
   if (n <= 1) return n;
   return fibonacci(n - 1) + fibonacci(n - 2);
 }`}
-                    className="min-h-[400px] font-mono text-sm code-block resize-none"
+                    className="textarea-mobile code-mobile min-h-[300px] font-mono text-sm"
                   />
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid gap-3">
+                <div className="space-y-3">
                   <Button
                     onClick={handleDebugWithReset}
                     disabled={isLoading}
-                    className="btn-primary"
+                    className="btn btn-primary btn-lg w-full touch-target"
                   >
                     {debugMutation.isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -376,17 +430,17 @@ function fibonacci(n) {
                     Debug & Fix Code
                   </Button>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Button
                       onClick={handleTranslateWithReset}
                       disabled={isLoading}
                       variant="outline"
-                      className="btn-secondary"
+                      className="btn btn-outline btn-md touch-target"
                     >
                       {translateMutation.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
-                        <Code className="mr-2 h-4 w-4" />
+                        <ArrowRight className="mr-2 h-4 w-4" />
                       )}
                       Translate
                     </Button>
@@ -395,7 +449,7 @@ function fibonacci(n) {
                       onClick={handleExplainWithReset}
                       disabled={isLoading}
                       variant="outline"
-                      className="btn-secondary"
+                      className="btn btn-outline btn-md touch-target"
                     >
                       {explainMutation.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -411,8 +465,13 @@ function fibonacci(n) {
           </motion.div>
 
           {/* Results Section */}
-          <motion.div className="space-y-6" variants={itemVariants}>
-            <Card className="modern-card">
+          <motion.div 
+            className="space-y-6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className="card-mobile">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center space-x-2">
@@ -424,10 +483,10 @@ function fibonacci(n) {
                       onClick={handleCopy}
                       size="sm"
                       variant="outline"
-                      className="glass border-primary/30 hover:border-primary/50"
+                      className="btn btn-outline btn-sm touch-target"
                     >
                       <Copy className="h-4 w-4 mr-2" />
-                      Copy Code
+                      Copy
                     </Button>
                   )}
                 </div>
@@ -444,11 +503,16 @@ function fibonacci(n) {
                     {isLoading ? (
                       <div className="flex flex-col items-center justify-center py-12 space-y-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">
-                          {debugMutation.isPending && "Analyzing code for bugs and issues..."}
-                          {translateMutation.isPending && `Translating from ${language} to ${targetLanguage}...`}
-                          {explainMutation.isPending && "Generating detailed code explanation..."}
-                        </p>
+                        <div className="text-center">
+                          <p className="font-medium text-foreground">
+                            {debugMutation.isPending && "Analyzing code..."}
+                            {translateMutation.isPending && "Translating..."}
+                            {explainMutation.isPending && "Generating explanation..."}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            This usually takes a few seconds
+                          </p>
+                        </div>
                       </div>
                     ) : getResults() ? (
                       <DebugResults
@@ -461,9 +525,9 @@ function fibonacci(n) {
                           <Code className="h-8 w-8 text-muted-foreground" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-lg mb-2">Ready to analyze your code</h3>
+                          <h3 className="font-semibold text-lg mb-2">Ready to analyze</h3>
                           <p className="text-muted-foreground text-sm max-w-sm">
-                            Enter your code above and choose an action to get started. 
+                            Enter your code and choose an action to get started. 
                             Our AI will help you debug, translate, or explain your code.
                           </p>
                         </div>
@@ -474,8 +538,36 @@ function fibonacci(n) {
               </CardContent>
             </Card>
           </motion.div>
+        </div>
+
+        {/* Quick Tips Section */}
+        <motion.div
+          className="mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <Card className="card-mobile bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="py-6">
+              <h3 className="font-semibold mb-3 flex items-center">
+                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                Pro Tips
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                <div>
+                  <strong className="text-foreground">🐛 Debug:</strong> Paste problematic code to find bugs, security issues, and performance improvements.
+                </div>
+                <div>
+                  <strong className="text-foreground">🔄 Translate:</strong> Convert code between languages while maintaining functionality and best practices.
+                </div>
+                <div>
+                  <strong className="text-foreground">📖 Explain:</strong> Get detailed explanations of complex algorithms and code patterns.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </main>
-    </motion.div>
+    </div>
   );
 }
