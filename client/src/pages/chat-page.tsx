@@ -39,14 +39,8 @@ export default function ChatPage() {
   // Mutation for sending messages to the AI
   const chatMutation = useMutation({
     mutationFn: async (data: { messages: ChatMessage[]; systemPrompt?: string }) => {
-      const response = await apiRequest("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      return response as ChatMessage;
+      const response = await apiRequest("POST", "/api/chat", data);
+      return (await response.json()) as ChatMessage;
     },
     onSuccess: (response) => {
       setMessages((prev) => [...prev, response]);
