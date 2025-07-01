@@ -119,25 +119,11 @@ const useLogoutMutation = () => {
   return useMutation({
     mutationFn: async () => {
       try {
-        // Clear Supabase auth state first
+        // Clear Supabase auth state
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
-
-        // Then clear server session
-        const response = await fetch('/api/logout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Server logout failed');
-        }
-
-        // Force reload to clear any cached state
-        window.location.reload();
+        
+        return true;
       } catch (error) {
         if (error instanceof AuthError) {
           throw new Error(error.message);
@@ -150,8 +136,7 @@ const useLogoutMutation = () => {
         title: "Signed out successfully",
         description: "Come back soon!",
       });
-      // Force a full page reload to clear all auth state
-      window.location.href = "/auth";
+      setLocation("/auth");
     },
     onError: (error: Error) => {
       toast({

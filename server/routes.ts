@@ -1,10 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
 import { analyzeCode, translateCode, explainCode, chatWithGemini, ChatMessage } from "./services/gemini";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  setupAuth(app);
 
   app.use((req, res, next) => {
     const start = Date.now();
