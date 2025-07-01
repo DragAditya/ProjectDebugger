@@ -8,7 +8,7 @@ import { Hero } from "./components/Hero";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import ChatPage from "@/pages/chat-page";
-import { ProtectedRoute, AuthCallback } from "./lib/protected-route";
+import { AuthCallback } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";

@@ -1,28 +1,94 @@
-import { Link } from "wouter"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
+import { motion } from "framer-motion";
+import { ThemeToggle } from "./theme-toggle";
+import { Home, MessageSquare, LogOut, User } from "lucide-react";
 
 export function Navbar() {
+  const { user, logoutMutation } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  const navItems = [
+    { path: "/home", label: "Debug", icon: Home },
+    { path: "/chat", label: "Chat", icon: MessageSquare },
+  ];
+
+  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Developer';
+
   return (
-    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-sm border-b">
-      <div className="container flex h-16 items-center">
-        <div className="flex-1 flex items-center">
-          <Link href="/">
-            <a className="font-bold text-2xl bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent mr-4">
-              CodeDebug
-            </a>
-          </Link>
-          <span className="text-sm text-muted-foreground">username</span>
-        </div>
-        
-        <div className="flex gap-4">
-          <Button variant="ghost" asChild>
-            <Link href="/docs">Docs</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/get-started">Get Started</Link>
-          </Button>
+    <motion.nav 
+      className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50"
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <div className="container-fluid">
+        <div className="flex items-center justify-between py-4">
+          {/* Logo */}
+          <motion.div 
+            className="flex items-center space-x-3"
+            whileHover={{ scale: 1.05 }}
+          >
+            <h1 className="text-2xl font-bold gradient-text cursor-pointer" onClick={() => setLocation("/")}>
+              ALTER
+            </h1>
+            {user && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>{username}</span>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Navigation Items */}
+          {user && (
+            <div className="flex items-center space-x-1">
+              {navItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant={location === item.path ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setLocation(item.path)}
+                  className={`transition-all duration-200 ${
+                    location === item.path 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-secondary/80"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
+            
+            {user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="glass border-border/50 hover:border-destructive/50 hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setLocation("/auth")}
+                className="btn-primary"
+              >
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-    </nav>
-  )
+    </motion.nav>
+  );
 }

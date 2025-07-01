@@ -1,40 +1,23 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
 import { analyzeCode, translateCode, explainCode, chatWithGemini, ChatMessage } from "./services/gemini";
+import { log } from "./vite";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  setupAuth(app);
 
   app.use((req, res, next) => {
     const start = Date.now();
     const path = req.path;
     let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-    // Log request details
-    const requestLog = {
-      timestamp: new Date().toISOString(),
-      type: 'request',
-      method: req.method,
-      path: req.path,
-      query: req.query,
-      body: req.body,
-      headers: req.headers,
-      ip: req.ip
-    };
-    console.log(JSON.stringify(requestLog));
+    // Log request details in development
+    if (process.env.NODE_ENV === 'development') {
+      log(`${req.method} ${req.path}`, 'api');
+    }
 
     const originalResJson = res.json;
     res.json = function (bodyJson, ...args) {
       capturedJsonResponse = bodyJson;
-      const responseLog = {
-        timestamp: new Date().toISOString(),
-        type: 'response',
-        path: path,
-        status: res.statusCode,
-        body: capturedJsonResponse
-      };
-      console.log(JSON.stringify(responseLog));
       return originalResJson.apply(res, [bodyJson, ...args]);
     };
 
@@ -48,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const debugResult = await analyzeCode(code, language);
       res.json(debugResult);
     } catch (error: any) {
-      console.error("Debug error:", error);
+      log(`Debug error: ${error.message}`, 'error');
       res.status(500).json({ message: error.message || "Failed to debug code" });
     }
   });
@@ -59,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await translateCode(code, fromLanguage, toLanguage);
       res.json(result);
     } catch (error: any) {
-      console.error("Translation error:", error);
+      log(`Translation error: ${error.message}`, 'error');
       res.status(500).json({ message: error.message || "Failed to translate code" });
     }
   });
@@ -94,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await explainCode(code, language);
       res.json(result);
     } catch (error: any) {
-      console.error("Explanation error:", error);
+      log(`Explanation error: ${error.message}`, 'error');
       res.status(500).json({ message: error.message || "Failed to explain code" });
     }
   });
@@ -122,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await chatWithGemini(messages as ChatMessage[], systemPrompt);
       res.json(response);
     } catch (error: any) {
-      console.error("Chat error:", error);
+      log(`Chat error: ${error.message}`, 'error');
       res.status(500).json({ message: error.message || "Failed to process chat" });
     }
   });
