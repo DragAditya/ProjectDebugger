@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2, Send, RefreshCw, Bot, User, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
 
 // Interface for chat messages
 interface ChatMessage {
@@ -31,8 +32,9 @@ const messageVariants = {
 };
 
 export default function ChatPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [systemPrompt, setSystemPrompt] = useState(
@@ -40,6 +42,35 @@ export default function ChatPage() {
   );
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "🔒 Authentication required",
+        description: "Please sign in to access the chat",
+        variant: "destructive",
+      });
+      setLocation("/auth");
+    }
+  }, [user, authLoading, setLocation, toast]);
+
+  // Show loading spinner while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   // Scroll to bottom of chat
   const scrollToBottom = () => {
@@ -64,7 +95,6 @@ export default function ChatPage() {
       });
     },
     onError: (error: Error) => {
-      console.error("Chat error:", error);
       toast({
         title: "❌ Error",
         description: `Failed to get AI response: ${error.message}`,

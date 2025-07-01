@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ import { Loader2, LogOut, Copy, Code, Zap, MessageSquare, User, Settings } from 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "wouter";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -56,12 +57,42 @@ const fadeInScale = {
 };
 
 export default function HomePage() {
-  const { logoutMutation, user } = useAuth();
+  const { logoutMutation, user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [language, setLanguage] = useState("javascript");
   const [targetLanguage, setTargetLanguage] = useState("python");
   const [code, setCode] = useState("");
   const [activeTab, setActiveTab] = useState<"debug" | "translate" | "explain">("debug");
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "🔒 Authentication required",
+        description: "Please sign in to access the dashboard",
+        variant: "destructive",
+      });
+      setLocation("/auth");
+    }
+  }, [user, authLoading, setLocation, toast]);
+
+  // Show loading spinner while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const debugMutation = useMutation({
     mutationFn: async (data: { code: string; language: string }) => {
