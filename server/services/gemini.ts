@@ -5,7 +5,7 @@ if (!process.env.GEMINI_API_KEY) {
   throw new Error("GEMINI_API_KEY environment variable is required");
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // A basic interface for chat messages
 export interface ChatMessage {
@@ -13,25 +13,18 @@ export interface ChatMessage {
   content: string;
 }
 
-// Utility function for retry logic with exponential backoff
-async function retryWithBackoff<T>(
-  operation: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
-): Promise<T> {
+async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
   let lastError: any;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await operation();
-    } catch (error: any) {
+      const result = await operation();
+      if (result) return result;
+      throw new Error("Empty response");
+    } catch (error) {
       lastError = error;
-      
-      if (attempt === maxRetries) break;
-      
-      // Exponential backoff with jitter
-      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      console.log(`Attempt ${attempt} failed, retrying...`);
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
   }
 
@@ -39,203 +32,173 @@ async function retryWithBackoff<T>(
 }
 
 export async function analyzeCode(code: string, language: string) {
-  if (!code?.trim()) {
-    throw new Error("Code cannot be empty");
-  }
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  return retryWithBackoff(async () => {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.3,
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 2048,
-      }
-    });
-
-    const prompt = `You are an expert ${language} developer and code reviewer. Analyze the following code and identify all issues, bugs, and improvements.
+      const prompt = `You are an expert code debugger. Analyze this ${language} code and provide debugging feedback.
 
 Code to analyze:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-Provide a JSON response with this exact structure (no markdown, no backticks):
+Provide your response in this exact JSON format, with no additional text or markdown:
 {
-  "issues": ["Specific issue 1", "Specific issue 2"],
-  "explanation": "Detailed explanation of problems and solutions",
-  "correctedCode": "Fixed version of the code"
+  "issues": ["List each specific issue found"],
+  "explanation": "A detailed technical explanation of all issues and how to fix them",
+  "correctedCode": "The complete fixed code that resolves all issues"
 }
 
-Focus on:
-- Syntax errors and bugs
-- Logic errors and edge cases  
-- Performance improvements
-- Best practices and code quality
-- Security vulnerabilities
-- Missing error handling
+Requirements:
+1. Return valid JSON only, no markdown
+2. List all syntax errors, logical errors, and best practice violations
+3. Provide complete corrected code that fixes all issues
+4. Use proper code formatting in the correctedCode field
+5. Keep the same language as the input code`;
 
-Ensure the correctedCode is fully functional and follows best practices.`;
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+      try {
+        const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+        const debugResult = {
+          issues: Array.isArray(parsedResponse.issues) ? parsedResponse.issues : [],
+          explanation: parsedResponse.explanation || "No explanation provided",
+          correctedCode: parsedResponse.correctedCode || code,
+        };
 
-    try {
-      // Clean up response text
-      const cleanText = text
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .trim();
+        if (!debugResult.explanation || debugResult.explanation === "No explanation provided") {
+          throw new Error("Invalid explanation");
+        }
 
-      const parsed = JSON.parse(cleanText);
-      
-      return {
-        issues: Array.isArray(parsed.issues) ? parsed.issues : [],
-        explanation: parsed.explanation || "No explanation provided",
-        correctedCode: parsed.correctedCode || code
-      };
-    } catch (parseError) {
-      console.error("Failed to parse Gemini response:", text);
-      
-      // Fallback response
-      return {
-        issues: ["Unable to analyze code due to service error"],
-        explanation: "The code analysis service encountered an error. Please try again.",
-        correctedCode: code
-      };
+        return debugResult;
+      } catch (e) {
+        console.error("Failed to parse Gemini response:", text, e);
+        throw e;
+      }
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      throw error;
     }
   });
 }
 
 export async function translateCode(code: string, fromLanguage: string, toLanguage: string) {
-  if (!code?.trim()) {
-    throw new Error("Code cannot be empty");
-  }
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  if (fromLanguage === toLanguage) {
-    return {
-      translatedCode: code,
-      explanation: "Source and target languages are the same - no translation needed."
-    };
-  }
+      const prompt = `As an expert programmer, translate this code from ${fromLanguage} to ${toLanguage}.
 
-  return retryWithBackoff(async () => {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.2,
-        topP: 0.8,
-        maxOutputTokens: 2048,
-      }
-    });
-
-    const prompt = `You are an expert programmer. Translate this ${fromLanguage} code to ${toLanguage}, maintaining the same functionality.
-
-Original ${fromLanguage} code:
+Original code (${fromLanguage}):
 \`\`\`${fromLanguage}
 ${code}
 \`\`\`
 
-Provide a JSON response with this exact structure (no markdown, no backticks):
+Provide your response in this exact JSON format only, with no additional text or code blocks:
 {
-  "translatedCode": "Complete translated code in ${toLanguage}",
-  "explanation": "Explanation of translation choices and language differences"
+  "translatedCode": "The translated code here",
+  "explanation": "Your detailed explanation here"
 }
 
 Requirements:
-- Maintain exact same functionality
-- Use idiomatic ${toLanguage} patterns
-- Include necessary imports/dependencies
-- Follow ${toLanguage} best practices
-- Handle language-specific differences`;
+1. Return valid JSON only
+2. Maintain the same functionality and logic
+3. Use idiomatic patterns for the target language
+4. Include any necessary imports or setup code
+5. Explain any significant changes or language-specific adaptations`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      let text = response.text();
 
-    try {
-      const cleanText = text
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .trim();
+      try {
+        // Clean up the response text
+        text = text.replace(/^```json\n|\n```$/g, ''); // Remove code block markers
+        text = text.replace(/\\n/g, '\n'); // Handle escaped newlines
+        
+        // Safety check for same language translation
+        if (fromLanguage === toLanguage) {
+          return {
+            translatedCode: code,
+            explanation: "No translation needed as source and target languages are the same."
+          };
+        }
+        
+        const parsedResponse = JSON.parse(text);
+        const translationResult = {
+          translatedCode: parsedResponse.translatedCode || "",
+          explanation: parsedResponse.explanation || "No explanation provided"
+        };
 
-      const parsed = JSON.parse(cleanText);
-      
-      return {
-        translatedCode: parsed.translatedCode || code,
-        explanation: parsed.explanation || "Translation completed"
-      };
-    } catch (parseError) {
-      console.error("Failed to parse translation response:", text);
-      
-      return {
-        translatedCode: code,
-        explanation: "Translation service encountered an error. Please try again."
-      };
+        if (!translationResult.translatedCode || !translationResult.explanation) {
+          throw new Error("Invalid translation response");
+        }
+
+        return translationResult;
+      } catch (e) {
+        console.error("Failed to parse Gemini response:", text, e);
+        throw e;
+      }
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      throw error;
     }
   });
 }
 
 export async function explainCode(code: string, language: string) {
-  if (!code?.trim()) {
-    throw new Error("Code cannot be empty");
-  }
+  return retryOperation(async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  return retryWithBackoff(async () => {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.4,
-        topP: 0.9,
-        maxOutputTokens: 2048,
-      }
-    });
-
-    const prompt = `You are an expert ${language} developer. Provide a comprehensive explanation of this code.
+      const prompt = `As an expert programmer, provide a detailed explanation of this ${language} code.
 
 Code to explain:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-Provide a JSON response with this exact structure (no markdown, no backticks):
+Provide your response in this exact JSON format:
 {
-  "overview": "Brief summary of what the code does",
-  "detailedExplanation": "Step-by-step explanation of the code logic",
-  "keyComponents": ["Key function 1", "Important variable 2", "Core concept 3"]
+  "overview": "Brief overview of what the code does",
+  "detailedExplanation": "Line-by-line or section-by-section explanation",
+  "keyComponents": ["List of important functions, variables, or concepts used"]
 }
 
-Focus on:
-- Overall purpose and functionality
-- How the code works step by step
-- Important functions, variables, and concepts
-- Programming patterns used
-- Potential improvements or alternatives`;
+Requirements:
+1. Explain the purpose and functionality
+2. Break down complex logic
+3. Highlight important programming concepts used
+4. Include best practices and potential improvements
+5. Use plain text formatting`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
 
-    try {
-      const cleanText = text
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .trim();
+      try {
+        const parsedResponse = JSON.parse(text.replace(/^```json\n|\n```$/g, ''));
+        const explanation = {
+          overview: typeof parsedResponse.overview === 'string' ? parsedResponse.overview : JSON.stringify(parsedResponse.overview),
+          detailedExplanation: typeof parsedResponse.detailedExplanation === 'string' ? parsedResponse.detailedExplanation : JSON.stringify(parsedResponse.detailedExplanation),
+          keyComponents: Array.isArray(parsedResponse.keyComponents) ? parsedResponse.keyComponents.map((c: any) => typeof c === 'string' ? c : JSON.stringify(c)) : []
+        };
 
-      const parsed = JSON.parse(cleanText);
-      
-      return {
-        overview: parsed.overview || "No overview available",
-        detailedExplanation: parsed.detailedExplanation || "No detailed explanation available",
-        keyComponents: Array.isArray(parsed.keyComponents) ? parsed.keyComponents : []
-      };
-    } catch (parseError) {
-      console.error("Failed to parse explanation response:", text);
-      
-      return {
-        overview: "Unable to analyze code due to service error",
-        detailedExplanation: "The explanation service encountered an error. Please try again.",
-        keyComponents: []
-      };
+        if (!explanation.overview || !explanation.detailedExplanation) {
+          throw new Error("Invalid explanation response");
+        }
+
+        return explanation;
+      } catch (e) {
+        console.error("Failed to parse Gemini response:", text, e);
+        throw e;
+      }
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      throw error;
     }
   });
 }
@@ -250,7 +213,7 @@ export async function chatWithGemini(messages: ChatMessage[], systemPrompt?: str
     throw new Error("Messages array cannot be empty");
   }
 
-  return retryWithBackoff(async () => {
+  return retryOperation(async () => {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       generationConfig: {
