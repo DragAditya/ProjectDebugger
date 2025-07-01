@@ -3,296 +3,311 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Icons } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "wouter";
 
-const containerVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut"
-    }
-  }
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut"
-    }
-  }
-};
+type AuthMode = "signin" | "signup" | "reset";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    username: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const { loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const { 
+    loginMutation, 
+    registerMutation, 
+    resetPasswordMutation,
+    resendConfirmationMutation 
+  } = useAuth();
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!isLogin && !formData.username) {
-      newErrors.username = "Username is required";
-    } else if (!isLogin && formData.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const isLoading = loginMutation.isPending || registerMutation.isPending || resetPasswordMutation.isPending;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-
-    if (isLogin) {
-      loginMutation.mutate({
-        email: formData.email,
-        password: formData.password,
-      });
-    } else {
-      registerMutation.mutate({
-        email: formData.email,
-        password: formData.password,
-        username: formData.username,
-      });
+    if (mode === "signin") {
+      loginMutation.mutate({ email, password });
+    } else if (mode === "signup") {
+      registerMutation.mutate({ email, password, username });
+    } else if (mode === "reset") {
+      resetPasswordMutation.mutate({ email });
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+  const handleResendConfirmation = () => {
+    if (email) {
+      resendConfirmationMutation.mutate({ email });
     }
   };
-
-  const isLoading = loginMutation.isPending || registerMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/90" />
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4 safe-top safe-bottom">
+      {/* Background decoration */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,_transparent_50%)] opacity-5" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--primary)_0%,_transparent_50%)] opacity-5" />
+
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
       >
         {/* Header */}
-        <motion.div className="text-center mb-8" variants={cardVariants}>
-          <h1 className="text-3xl font-bold gradient-text mb-2">ALTER</h1>
-          <p className="text-muted-foreground">
-            {isLogin ? "Welcome back to your AI debugging assistant" : "Join the future of code debugging"}
-          </p>
-        </motion.div>
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+            className="mb-4"
+          >
+            <h1 className="text-display gradient-text font-bold">ALTER</h1>
+            <p className="text-muted-foreground mt-2">
+              AI-powered code analysis platform
+            </p>
+          </motion.div>
+
+          {/* Back button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/")}
+            className="mb-6 touch-target"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+        </div>
 
         {/* Auth Card */}
-        <motion.div variants={cardVariants}>
-          <Card className="modern-card border-border/50">
-            <CardHeader className="space-y-4">
-              <div className="flex justify-center">
-                <div className="flex bg-muted/50 rounded-lg p-1">
-                  <Button
-                    variant={isLogin ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setIsLogin(true)}
-                    className={`transition-all duration-200 ${
-                      isLogin ? "bg-primary text-primary-foreground shadow-sm" : ""
-                    }`}
-                  >
-                    Sign In
-                  </Button>
-                  <Button
-                    variant={!isLogin ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setIsLogin(false)}
-                    className={`transition-all duration-200 ${
-                      !isLogin ? "bg-primary text-primary-foreground shadow-sm" : ""
-                    }`}
-                  >
-                    Sign Up
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <CardTitle className="text-xl">
-                  {isLogin ? "Sign in to your account" : "Create your account"}
-                </CardTitle>
-                <CardDescription className="mt-2">
-                  {isLogin 
-                    ? "Enter your credentials to access your dashboard" 
-                    : "Get started with AI-powered code debugging"
-                  }
-                </CardDescription>
-              </div>
-            </CardHeader>
+        <Card className="card-mobile shadow-xl border-border/50">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-heading">
+              {mode === "signin" && "Welcome back"}
+              {mode === "signup" && "Create account"}
+              {mode === "reset" && "Reset password"}
+            </CardTitle>
+            <CardDescription>
+              {mode === "signin" && "Sign in to your account to continue"}
+              {mode === "signup" && "Get started with your new account"}
+              {mode === "reset" && "We'll send you a link to reset your password"}
+            </CardDescription>
+          </CardHeader>
 
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <AnimatePresence mode="wait">
-                  {!isLogin && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className="space-y-2">
-                        <label htmlFor="username" className="text-sm font-medium text-muted-foreground">
-                          Username
-                        </label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="username"
-                            type="text"
-                            placeholder="Enter your username"
-                            value={formData.username}
-                            onChange={(e) => handleInputChange("username", e.target.value)}
-                            className={`pl-10 modern-input ${errors.username ? "error-state" : ""}`}
-                            disabled={isLoading}
-                          />
-                        </div>
-                        {errors.username && (
-                          <p className="error-text">{errors.username}</p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
+          <CardContent className="space-y-6">
+            <AnimatePresence mode="wait">
+              <motion.form
+                key={mode}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                onSubmit={handleSubmit}
+                className="space-y-4"
+              >
+                {/* Email Field */}
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-muted-foreground">
-                    Email
-                  </label>
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email address
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="Enter your email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className={`pl-10 modern-input ${errors.email ? "error-state" : ""}`}
-                      disabled={isLoading}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-mobile pl-10"
+                      required
+                      autoComplete="email"
                     />
                   </div>
-                  {errors.email && (
-                    <p className="error-text">{errors.email}</p>
-                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium text-muted-foreground">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
-                      className={`pl-10 pr-10 modern-input ${errors.password ? "error-state" : ""}`}
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      disabled={isLoading}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                {/* Username Field (only for signup) */}
+                {mode === "signup" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2"
+                  >
+                    <Label htmlFor="username" className="text-sm font-medium">
+                      Username
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="username"
+                        type="text"
+                        placeholder="Choose a username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="input-mobile pl-10"
+                        required
+                        autoComplete="username"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Password Field (not for reset) */}
+                {mode !== "reset" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder={mode === "signup" ? "Create a password (8+ characters)" : "Enter your password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="input-mobile pl-10 pr-10"
+                        required
+                        autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 touch-target"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                  {errors.password && (
-                    <p className="error-text">{errors.password}</p>
-                  )}
-                </div>
+                )}
 
+                {/* Submit Button */}
                 <Button
                   type="submit"
+                  className="btn btn-primary btn-lg w-full"
                   disabled={isLoading}
-                  className="w-full btn-primary group"
                 >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      {isLogin ? "Sign In" : "Create Account"}
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
+                  {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+                  {mode === "signin" && "Sign in"}
+                  {mode === "signup" && "Create account"}
+                  {mode === "reset" && "Send reset link"}
                 </Button>
-              </form>
+              </motion.form>
+            </AnimatePresence>
 
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <div className="text-center space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {isLogin ? "Don't have an account?" : "Already have an account?"}
-                    <button
-                      onClick={() => setIsLogin(!isLogin)}
-                      className="ml-1 text-primary hover:text-primary/80 font-medium transition-colors"
-                      disabled={isLoading}
-                    >
-                      {isLogin ? "Sign up" : "Sign in"}
-                    </button>
-                  </p>
-                  
+            {/* Mode Switcher */}
+            <div className="space-y-4 pt-4 border-t border-border/50">
+              {mode === "signin" && (
+                <div className="space-y-3 text-center">
                   <Button
-                    variant="outline"
-                    onClick={() => setLocation("/")}
-                    className="w-full glass border-border/50 hover:border-primary/30"
-                    disabled={isLoading}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMode("reset")}
+                    className="text-sm text-muted-foreground hover:text-foreground touch-target"
                   >
-                    Back to Home
+                    Forgot your password?
                   </Button>
+                  <div className="text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setMode("signup")}
+                      className="p-0 h-auto font-medium text-primary hover:text-primary/80"
+                    >
+                      Sign up
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              )}
+
+              {mode === "signup" && (
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Already have an account?{" "}
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setMode("signin")}
+                      className="p-0 h-auto font-medium text-primary hover:text-primary/80"
+                    >
+                      Sign in
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {mode === "reset" && (
+                <div className="space-y-3 text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Remember your password?{" "}
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setMode("signin")}
+                      className="p-0 h-auto font-medium text-primary hover:text-primary/80"
+                    >
+                      Sign in
+                    </Button>
+                  </div>
+                  
+                  {email && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResendConfirmation}
+                      disabled={resendConfirmationMutation.isPending}
+                      className="w-full touch-target"
+                    >
+                      {resendConfirmationMutation.isPending && (
+                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Resend confirmation email
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Additional Features */}
+            {mode === "signup" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-xs text-muted-foreground text-center space-y-2"
+              >
+                <p>
+                  By creating an account, you agree to our Terms of Service and Privacy Policy.
+                </p>
+                <p>
+                  🔒 Your data is encrypted and secure. We'll never share your information.
+                </p>
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Footer */}
-        <motion.div 
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
           className="text-center mt-8 text-sm text-muted-foreground"
-          variants={cardVariants}
         >
-          <p>Secure authentication powered by Supabase</p>
+          <p>Need help? Contact support</p>
         </motion.div>
       </motion.div>
     </div>
