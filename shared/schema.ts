@@ -16,8 +16,9 @@ export const insertUserSchema = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores and hyphens"),
   email: z.string().email("Please enter a valid email"),
   password: z.string()
-    .min(6, "Password must be at least 6 characters")
+    .min(8, "Password must be at least 8 characters")
     .max(100, "Password cannot exceed 100 characters")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, "Password must contain at least one uppercase letter, one lowercase letter, and one number")
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
