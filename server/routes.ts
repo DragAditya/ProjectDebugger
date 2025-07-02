@@ -28,6 +28,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/debug", async (req, res) => {
     try {
       const { code, language } = req.body;
+      
+      // Validate input
+      if (!code || !language) {
+        return res.status(400).json({ 
+          message: "Code and language are required" 
+        });
+      }
+      
+      log(`Debug request for ${language}`, 'info');
       const debugResult = await analyzeCode(code, language);
       res.json(debugResult);
     } catch (error: any) {
@@ -39,6 +48,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/translate", async (req, res) => {
     try {
       const { code, fromLanguage, toLanguage } = req.body;
+      
+      // Validate input
+      if (!code || !fromLanguage || !toLanguage) {
+        return res.status(400).json({ 
+          message: "Code, fromLanguage, and toLanguage are required" 
+        });
+      }
+      
+      log(`Translation request from ${fromLanguage} to ${toLanguage}`, 'info');
       const result = await translateCode(code, fromLanguage, toLanguage);
       res.json(result);
     } catch (error: any) {
@@ -74,6 +92,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/explain", async (req, res) => {
     try {
       const { code, language } = req.body;
+      
+      // Validate input
+      if (!code || !language) {
+        return res.status(400).json({ 
+          message: "Code and language are required" 
+        });
+      }
+      
+      log(`Explanation request for ${language}`, 'info');
       const result = await explainCode(code, language);
       res.json(result);
     } catch (error: any) {

@@ -15,6 +15,8 @@ type AuthContextType = {
   resetPasswordMutation: ReturnType<typeof useResetPasswordMutation>;
   updatePasswordMutation: ReturnType<typeof useUpdatePasswordMutation>;
   resendConfirmationMutation: ReturnType<typeof useResendConfirmationMutation>;
+  signInWithGoogleMutation: ReturnType<typeof useSignInWithGoogleMutation>;
+  signInWithGitHubMutation: ReturnType<typeof useSignInWithGitHubMutation>;
 };
 
 const useLoginMutation = () => {
@@ -255,6 +257,66 @@ const useResendConfirmationMutation = () => {
   });
 };
 
+const useSignInWithGoogleMutation = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/home`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to sign in with Google');
+      }
+
+      return true;
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "❌ Google sign-in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+const useSignInWithGitHubMutation = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/home`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to sign in with GitHub');
+      }
+
+      return true;
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "❌ GitHub sign-in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
 const useLogoutMutation = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -350,6 +412,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPasswordMutation = useResetPasswordMutation();
   const updatePasswordMutation = useUpdatePasswordMutation();
   const resendConfirmationMutation = useResendConfirmationMutation();
+  const signInWithGoogleMutation = useSignInWithGoogleMutation();
+  const signInWithGitHubMutation = useSignInWithGitHubMutation();
 
   return (
     <AuthContext.Provider
@@ -363,6 +427,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPasswordMutation,
         updatePasswordMutation,
         resendConfirmationMutation,
+        signInWithGoogleMutation,
+        signInWithGitHubMutation,
       }}
     >
       {children}

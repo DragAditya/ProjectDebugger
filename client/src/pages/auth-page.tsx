@@ -24,7 +24,9 @@ export default function AuthPage() {
     loginMutation, 
     registerMutation, 
     resetPasswordMutation,
-    resendConfirmationMutation 
+    resendConfirmationMutation,
+    signInWithGoogleMutation,
+    signInWithGitHubMutation
   } = useAuth();
 
   const isLoading = loginMutation.isPending || registerMutation.isPending || resetPasswordMutation.isPending;
@@ -45,6 +47,14 @@ export default function AuthPage() {
     if (email) {
       resendConfirmationMutation.mutate({ email });
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    signInWithGoogleMutation.mutate();
+  };
+
+  const handleGitHubSignIn = () => {
+    signInWithGitHubMutation.mutate();
   };
 
   return (
@@ -279,6 +289,39 @@ export default function AuthPage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* OAuth Providers */}
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/50" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                  className="btn btn-outline btn-md touch-target"
+                >
+                  <Icons.google className="mr-2 h-4 w-4" />
+                  Google
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleGitHubSignIn}
+                  disabled={isLoading}
+                  className="btn btn-outline btn-md touch-target"
+                >
+                  <Icons.gitHub className="mr-2 h-4 w-4" />
+                  GitHub
+                </Button>
+              </div>
             </div>
 
             {/* Additional Features */}

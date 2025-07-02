@@ -63,8 +63,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
         <AuthProvider>
-          <Router />
-          <Toaster />
+          <div className="min-h-screen bg-background">
+            <Router />
+            <Toaster />
+          </div>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
