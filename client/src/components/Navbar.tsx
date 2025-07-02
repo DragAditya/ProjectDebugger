@@ -27,14 +27,14 @@ export function Navbar() {
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <motion.div 
-            className="flex items-center space-x-3"
+            className="flex items-center space-x-2 sm:space-x-3"
             whileHover={{ scale: 1.05 }}
           >
-            <h1 className="text-2xl font-bold gradient-text cursor-pointer" onClick={() => setLocation("/")}>
+            <h1 className="text-xl sm:text-2xl font-bold gradient-text cursor-pointer" onClick={() => setLocation("/")}>
               ALTER
             </h1>
             {user && (
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span>{username}</span>
               </div>
@@ -50,21 +50,21 @@ export function Navbar() {
                   variant={location === item.path ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setLocation(item.path)}
-                  className={`transition-all duration-200 ${
+                  className={`transition-all duration-200 touch-target ${
                     location === item.path 
                       ? "bg-primary text-primary-foreground" 
                       : "hover:bg-secondary/80"
                   }`}
                 >
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
+                  <item.icon className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{item.label}</span>
                 </Button>
               ))}
             </div>
           )}
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <ThemeToggle />
             
             {user ? (
@@ -73,17 +73,18 @@ export function Navbar() {
                 size="sm"
                 onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
-                className="glass border-border/50 hover:border-destructive/50 hover:text-destructive"
+                className="glass border-border/50 hover:border-destructive/50 hover:text-destructive touch-target"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             ) : (
               <Button
                 onClick={() => setLocation("/auth")}
-                className="btn-primary"
+                className="btn-primary touch-target"
               >
-                Sign In
+                <span className="hidden sm:inline">Sign In</span>
+                <span className="sm:hidden">Login</span>
               </Button>
             )}
           </div>

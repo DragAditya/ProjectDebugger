@@ -4,31 +4,40 @@ import { analyzeCode, translateCode, explainCode, chatWithGemini, ChatMessage } 
 import { log } from "./vite";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-
-  app.use((req, res, next) => {
-    const start = Date.now();
-    const path = req.path;
-    let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-    // Log request details in development
-    if (process.env.NODE_ENV === 'development') {
-      log(`${req.method} ${req.path}`, 'api');
-    }
-
-    const originalResJson = res.json;
-    res.json = function (bodyJson, ...args) {
-      capturedJsonResponse = bodyJson;
-      return originalResJson.apply(res, [bodyJson, ...args]);
-    };
-
-    next();
-  });
+  // Note: Logging middleware is handled in server/index.ts to avoid duplication
 
 
   app.post("/api/debug", async (req, res) => {
     try {
       const { code, language } = req.body;
-      const debugResult = await analyzeCode(code, language);
+      
+      // Enhanced input validation and sanitization
+      if (!code || typeof code !== 'string' || !code.trim()) {
+        return res.status(400).json({ 
+          message: "Valid code is required" 
+        });
+      }
+      
+      if (!language || typeof language !== 'string' || !language.trim()) {
+        return res.status(400).json({ 
+          message: "Valid language is required" 
+        });
+      }
+      
+      // Sanitize inputs - trim and limit length
+      const sanitizedCode = code.trim().slice(0, 50000); // Limit to 50k characters
+      const sanitizedLanguage = language.trim().toLowerCase().slice(0, 50);
+      
+      // Validate language is in allowed list
+      const allowedLanguages = ['javascript', 'python', 'java', 'cpp', 'typescript', 'go', 'rust', 'c', 'csharp'];
+      if (!allowedLanguages.includes(sanitizedLanguage)) {
+        return res.status(400).json({ 
+          message: `Unsupported language. Allowed: ${allowedLanguages.join(', ')}` 
+        });
+      }
+      
+      log(`Debug request for ${sanitizedLanguage} (${sanitizedCode.length} chars)`, 'info');
+      const debugResult = await analyzeCode(sanitizedCode, sanitizedLanguage);
       res.json(debugResult);
     } catch (error: any) {
       log(`Debug error: ${error.message}`, 'error');
@@ -39,7 +48,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/translate", async (req, res) => {
     try {
       const { code, fromLanguage, toLanguage } = req.body;
-      const result = await translateCode(code, fromLanguage, toLanguage);
+      
+      // Enhanced input validation and sanitization
+      if (!code || typeof code !== 'string' || !code.trim()) {
+        return res.status(400).json({ 
+          message: "Valid code is required" 
+        });
+      }
+      
+      if (!fromLanguage || typeof fromLanguage !== 'string' || !fromLanguage.trim()) {
+        return res.status(400).json({ 
+          message: "Valid fromLanguage is required" 
+        });
+      }
+      
+      if (!toLanguage || typeof toLanguage !== 'string' || !toLanguage.trim()) {
+        return res.status(400).json({ 
+          message: "Valid toLanguage is required" 
+        });
+      }
+      
+      // Sanitize inputs
+      const sanitizedCode = code.trim().slice(0, 50000);
+      const sanitizedFromLanguage = fromLanguage.trim().toLowerCase().slice(0, 50);
+      const sanitizedToLanguage = toLanguage.trim().toLowerCase().slice(0, 50);
+      
+      // Validate languages
+      const allowedLanguages = ['javascript', 'python', 'java', 'cpp', 'typescript', 'go', 'rust', 'c', 'csharp'];
+      if (!allowedLanguages.includes(sanitizedFromLanguage) || !allowedLanguages.includes(sanitizedToLanguage)) {
+        return res.status(400).json({ 
+          message: `Unsupported language. Allowed: ${allowedLanguages.join(', ')}` 
+        });
+      }
+      
+      log(`Translation request from ${sanitizedFromLanguage} to ${sanitizedToLanguage} (${sanitizedCode.length} chars)`, 'info');
+      const result = await translateCode(sanitizedCode, sanitizedFromLanguage, sanitizedToLanguage);
       res.json(result);
     } catch (error: any) {
       log(`Translation error: ${error.message}`, 'error');
@@ -74,7 +117,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/explain", async (req, res) => {
     try {
       const { code, language } = req.body;
-      const result = await explainCode(code, language);
+      
+      // Enhanced input validation and sanitization
+      if (!code || typeof code !== 'string' || !code.trim()) {
+        return res.status(400).json({ 
+          message: "Valid code is required" 
+        });
+      }
+      
+      if (!language || typeof language !== 'string' || !language.trim()) {
+        return res.status(400).json({ 
+          message: "Valid language is required" 
+        });
+      }
+      
+      // Sanitize inputs
+      const sanitizedCode = code.trim().slice(0, 50000);
+      const sanitizedLanguage = language.trim().toLowerCase().slice(0, 50);
+      
+      // Validate language
+      const allowedLanguages = ['javascript', 'python', 'java', 'cpp', 'typescript', 'go', 'rust', 'c', 'csharp'];
+      if (!allowedLanguages.includes(sanitizedLanguage)) {
+        return res.status(400).json({ 
+          message: `Unsupported language. Allowed: ${allowedLanguages.join(', ')}` 
+        });
+      }
+      
+      log(`Explanation request for ${sanitizedLanguage} (${sanitizedCode.length} chars)`, 'info');
+      const result = await explainCode(sanitizedCode, sanitizedLanguage);
       res.json(result);
     } catch (error: any) {
       log(`Explanation error: ${error.message}`, 'error');

@@ -13,6 +13,7 @@ import { AuthCallback } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function Router() {
   const [location] = useLocation();
@@ -60,14 +61,18 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-        <AuthProvider>
-          <Router />
-          <Toaster />
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+          <AuthProvider>
+            <div className="min-h-screen bg-background">
+              <Router />
+              <Toaster />
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

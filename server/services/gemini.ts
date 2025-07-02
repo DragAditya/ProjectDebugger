@@ -82,26 +82,39 @@ Ensure the correctedCode is fully functional and follows best practices.`;
     const text = result.response.text();
 
     try {
-      // Clean up response text
-      const cleanText = text
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .trim();
+      // Enhanced cleaning of response text
+      let cleanText = text.trim();
+      
+      // Remove markdown code blocks
+      cleanText = cleanText.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      
+      // Remove any leading/trailing whitespace or non-JSON content
+      const jsonStart = cleanText.indexOf('{');
+      const jsonEnd = cleanText.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+      }
 
       const parsed = JSON.parse(cleanText);
       
+      // Validate response structure
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new Error('Invalid response structure');
+      }
+      
       return {
         issues: Array.isArray(parsed.issues) ? parsed.issues : [],
-        explanation: parsed.explanation || "No explanation provided",
-        correctedCode: parsed.correctedCode || code
+        explanation: typeof parsed.explanation === 'string' ? parsed.explanation : "No explanation provided",
+        correctedCode: typeof parsed.correctedCode === 'string' ? parsed.correctedCode : code
       };
     } catch (parseError) {
-      console.error("Failed to parse Gemini response:", text);
+      console.error("Failed to parse Gemini response:", { text, error: parseError });
       
-      // Fallback response
+      // Enhanced fallback response with more details
       return {
-        issues: ["Unable to analyze code due to service error"],
-        explanation: "The code analysis service encountered an error. Please try again.",
+        issues: ["Unable to analyze code due to response parsing error"],
+        explanation: `The code analysis service returned an unexpected response format. Please try again. Error: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
         correctedCode: code
       };
     }
@@ -154,23 +167,37 @@ Requirements:
     const text = result.response.text();
 
     try {
-      const cleanText = text
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .trim();
+      // Enhanced cleaning of response text
+      let cleanText = text.trim();
+      
+      // Remove markdown code blocks
+      cleanText = cleanText.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      
+      // Remove any leading/trailing whitespace or non-JSON content
+      const jsonStart = cleanText.indexOf('{');
+      const jsonEnd = cleanText.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+      }
 
       const parsed = JSON.parse(cleanText);
       
+      // Validate response structure
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new Error('Invalid response structure');
+      }
+      
       return {
-        translatedCode: parsed.translatedCode || code,
-        explanation: parsed.explanation || "Translation completed"
+        translatedCode: typeof parsed.translatedCode === 'string' ? parsed.translatedCode : code,
+        explanation: typeof parsed.explanation === 'string' ? parsed.explanation : "Translation completed"
       };
     } catch (parseError) {
-      console.error("Failed to parse translation response:", text);
+      console.error("Failed to parse translation response:", { text, error: parseError });
       
       return {
         translatedCode: code,
-        explanation: "Translation service encountered an error. Please try again."
+        explanation: `Translation service returned an unexpected response format. Please try again. Error: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
       };
     }
   });
@@ -216,24 +243,38 @@ Focus on:
     const text = result.response.text();
 
     try {
-      const cleanText = text
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .trim();
+      // Enhanced cleaning of response text
+      let cleanText = text.trim();
+      
+      // Remove markdown code blocks
+      cleanText = cleanText.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      
+      // Remove any leading/trailing whitespace or non-JSON content
+      const jsonStart = cleanText.indexOf('{');
+      const jsonEnd = cleanText.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+      }
 
       const parsed = JSON.parse(cleanText);
       
+      // Validate response structure
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new Error('Invalid response structure');
+      }
+      
       return {
-        overview: parsed.overview || "No overview available",
-        detailedExplanation: parsed.detailedExplanation || "No detailed explanation available",
+        overview: typeof parsed.overview === 'string' ? parsed.overview : "No overview available",
+        detailedExplanation: typeof parsed.detailedExplanation === 'string' ? parsed.detailedExplanation : "No detailed explanation available",
         keyComponents: Array.isArray(parsed.keyComponents) ? parsed.keyComponents : []
       };
     } catch (parseError) {
-      console.error("Failed to parse explanation response:", text);
+      console.error("Failed to parse explanation response:", { text, error: parseError });
       
       return {
-        overview: "Unable to analyze code due to service error",
-        detailedExplanation: "The explanation service encountered an error. Please try again.",
+        overview: "Unable to analyze code due to response parsing error",
+        detailedExplanation: `The explanation service returned an unexpected response format. Please try again. Error: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
         keyComponents: []
       };
     }
