@@ -91,7 +91,10 @@
     "esbuild": "^0.25.0",
     "@vitejs/plugin-react": "^4.3.2",
     "@replit/vite-plugin-cartographer": "^0.0.2",
-    "@replit/vite-plugin-runtime-error-modal": "^0.0.3"
+    "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
@@ -104,10 +107,7 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@types/ws": "^8.5.13",
-    "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.30.4",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14",
     "tsx": "^4.19.1",
     "typescript": "5.6.3"
   },
