@@ -1,0 +1,167 @@
+# Multi-stage build for secure, minimal sandbox containers
+FROM ubuntu:22.04 AS base
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV USER=terminalpp
+ENV UID=1000
+ENV GID=1000
+ENV HOME=/home/$USER
+ENV SHELL=/bin/bash
+
+# Security hardening
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gnupg \
+        lsb-release && \
+    # Remove unnecessary packages that could be security risks
+    apt-get remove -y --purge \
+        wget \
+        curl \
+        netcat \
+        telnet \
+        ssh \
+        openssh-client \
+        openssh-server && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Create non-root user with restricted permissions
+RUN groupadd -g $GID $USER && \
+    useradd -u $UID -g $GID -s $SHELL -m $USER && \
+    # Set secure directory permissions
+    chmod 700 $HOME && \
+    chown -R $USER:$USER $HOME
+
+# Install essential development tools in minimal way
+FROM base AS tools
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        # Core utilities
+        coreutils \
+        findutils \
+        grep \
+        sed \
+        awk \
+        tar \
+        gzip \
+        unzip \
+        # Text editing
+        nano \
+        vim-tiny \
+        # File management
+        tree \
+        less \
+        # Build essentials (minimal)
+        build-essential \
+        pkg-config \
+        # Version control
+        git \
+        # Process management
+        htop \
+        procps \
+        # Network troubleshooting (limited)
+        ping \
+        # Development languages (will be customized per image)
+        python3 \
+        python3-pip \
+        nodejs \
+        npm && \
+    # Clean up
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Configure Git for security
+RUN git config --system user.name "Terminal++ User" && \
+    git config --system user.email "user@terminalpp.dev" && \
+    git config --system init.defaultBranch main && \
+    git config --system core.autocrlf input
+
+# Install Node.js tools with security constraints
+RUN npm config set fund false && \
+    npm config set audit-level moderate && \
+    npm install -g --no-optional \
+        create-react-app \
+        @vue/cli \
+        @angular/cli \
+        typescript \
+        nodemon && \
+    npm cache clean --force
+
+# Python security setup
+RUN python3 -m pip install --no-cache-dir --upgrade pip && \
+    python3 -m pip install --no-cache-dir \
+        virtualenv \
+        poetry \
+        black \
+        flake8 \
+        pytest
+
+# Final stage with security lockdown
+FROM tools AS final
+
+# Copy security configurations
+COPY --chown=root:root seccomp-profile.json /etc/docker/seccomp.json
+COPY --chown=root:root apparmor-profile /etc/apparmor.d/docker-terminalpp
+
+# Set up secure tmpfs mounts and read-only paths
+RUN mkdir -p /tmp-secure /var-tmp-secure && \
+    chmod 1777 /tmp-secure /var-tmp-secure && \
+    # Remove potentially dangerous binaries
+    rm -f /bin/mount /bin/umount /usr/bin/sudo /usr/bin/su && \
+    # Set immutable flags on critical system files
+    chattr +i /etc/passwd /etc/shadow /etc/group /etc/sudoers 2>/dev/null || true
+
+# Create workspace directory structure
+USER $USER
+WORKDIR $HOME
+
+RUN mkdir -p \
+        $HOME/workspace \
+        $HOME/.config \
+        $HOME/.cache \
+        $HOME/.local/bin \
+        $HOME/.local/share && \
+    chmod 755 $HOME/workspace && \
+    chmod 700 $HOME/.config $HOME/.cache
+
+# Set up shell environment with security
+COPY --chown=$USER:$USER configs/.bashrc $HOME/.bashrc
+COPY --chown=$USER:$USER configs/.bash_profile $HOME/.bash_profile
+COPY --chown=$USER:$USER configs/.vimrc $HOME/.vimrc
+
+# Security constraints and resource limits
+LABEL \
+    security.capabilities="CHOWN,SETGID,SETUID" \
+    security.no-new-privileges="true" \
+    security.read-only-root="false" \
+    security.tmpfs="/tmp,/var/tmp,/run" \
+    resource.cpu="1000m" \
+    resource.memory="2Gi" \
+    resource.disk="10Gi"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ps aux | grep -v grep | grep -q bash || exit 1
+
+# Default command
+CMD ["/bin/bash", "-l"]
+
+# Build arguments for customization
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+# Labels for traceability
+LABEL \
+    org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.version=$VERSION \
+    org.label-schema.name="Terminal++ Sandbox" \
+    org.label-schema.description="Secure development sandbox container" \
+    org.label-schema.vendor="Terminal++" \
+    org.label-schema.schema-version="1.0"

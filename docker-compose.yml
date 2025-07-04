@@ -1,0 +1,435 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: terminalpp-postgres
+    environment:
+      POSTGRES_DB: terminalpp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev_password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - terminalpp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: terminalpp-redis
+    command: redis-server --requirepass redis_dev_password --appendonly yes
+    volumes:
+      - redis_data:/data
+      - ./infrastructure/redis/redis.conf:/etc/redis.conf
+    ports:
+      - "6379:6379"
+    networks:
+      - terminalpp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Vector Database (Weaviate)
+  weaviate:
+    image: semitechnologies/weaviate:1.22.4
+    container_name: terminalpp-weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    ports:
+      - "8080:8080"
+    networks:
+      - terminalpp-network
+    restart: unless-stopped
+
+  # Backend API Server
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    container_name: terminalpp-api
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgres://postgres:postgres_dev_password@postgres:5432/terminalpp
+      REDIS_URL: redis://:redis_dev_password@redis:6379
+      WEAVIATE_URL: http://weaviate:8080
+      JWT_SECRET: dev_jwt_secret_change_in_production
+      DOCKER_HOST: unix:///var/run/docker.sock
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY}
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - sandbox_storage:/var/lib/terminalpp/sandboxes
+    ports:
+      - "3001:3001"
+    networks:
+      - terminalpp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/api
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./apps/api/package.json
+
+  # Container Runtime Service
+  container-runtime:
+    build:
+      context: ./apps/container-runtime
+      dockerfile: Dockerfile
+      target: development
+    container_name: terminalpp-runtime
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      REDIS_URL: redis://:redis_dev_password@redis:6379
+      DOCKER_HOST: unix:///var/run/docker.sock
+      SANDBOX_NETWORK: terminalpp-sandbox
+      MAX_CONTAINERS: 100
+      CONTAINER_TIMEOUT: 3600
+    volumes:
+      - ./apps/container-runtime:/app
+      - /app/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock
+      - sandbox_storage:/var/lib/terminalpp/sandboxes
+      - ./infrastructure/docker:/docker-configs:ro
+    ports:
+      - "3002:3002"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/container-runtime
+          target: /app
+          ignore:
+            - node_modules/
+
+  # AI Orchestrator Service
+  ai-orchestrator:
+    build:
+      context: ./apps/ai-orchestrator
+      dockerfile: Dockerfile
+      target: development
+    container_name: terminalpp-ai
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DATABASE_URL: postgres://postgres:postgres_dev_password@postgres:5432/terminalpp
+      REDIS_URL: redis://:redis_dev_password@redis:6379
+      WEAVIATE_URL: http://weaviate:8080
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY}
+      OLLAMA_URL: http://ollama:11434
+    volumes:
+      - ./apps/ai-orchestrator:/app
+      - /app/node_modules
+      - ai_models:/app/models
+    ports:
+      - "3003:3003"
+    networks:
+      - terminalpp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/ai-orchestrator
+          target: /app
+          ignore:
+            - node_modules/
+
+  # Ollama (Local LLM Runtime)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: terminalpp-ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+      OLLAMA_MODELS: /root/.ollama/models
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - terminalpp-network
+    restart: unless-stopped
+    # Uncomment if you have GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Frontend Web Application
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: development
+    container_name: terminalpp-web
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_WS_URL: ws://localhost:3001
+      NEXT_PUBLIC_APP_NAME: Terminal++
+      NEXT_PUBLIC_APP_VERSION: 1.0.0-dev
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - api
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/web
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+        - action: rebuild
+          path: ./apps/web/package.json
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: terminalpp-nginx
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl-certs:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
+
+  # File Storage (MinIO - S3 Compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: terminalpp-minio
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_dev_password
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - terminalpp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: terminalpp-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - terminalpp-network
+    restart: unless-stopped
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: terminalpp-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: grafana_dev_password
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3030:3000"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Log Management - Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: terminalpp-elasticsearch
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - terminalpp-network
+    restart: unless-stopped
+
+  # Log Management - Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.0
+    container_name: terminalpp-kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  # Development Tools - Mailhog (Email Testing)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: terminalpp-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - terminalpp-network
+    restart: unless-stopped
+
+  # Development Tools - pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: terminalpp-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@terminalpp.dev
+      PGADMIN_DEFAULT_PASSWORD: pgadmin_dev_password
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Development Tools - Redis Commander
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: terminalpp-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:redis_dev_password
+    ports:
+      - "8081:8081"
+    networks:
+      - terminalpp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+# Networks
+networks:
+  terminalpp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  terminalpp-sandbox:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+
+# Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  weaviate_data:
+    driver: local
+  minio_data:
+    driver: local
+  sandbox_storage:
+    driver: local
+  ai_models:
+    driver: local
+  ollama_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+# Development specific overrides
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
